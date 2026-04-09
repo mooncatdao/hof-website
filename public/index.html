@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Day 1 MoonCat Club</title>
+    <link href="https://fonts.cdnfonts.com/css/setback" rel="stylesheet" />
+    <link rel="preload" href="./libmooncat-limited.js" as="script" />
+    <script src="./libmooncat-limited.js"></script>
+    <style>
+      :root {
+        --bg: #111111;
+        --panel: #f0f4df;
+        --panel-line: #151515;
+        --mint: #79ef76;
+        --mint-shadow: #2f8a4c;
+        --text: #111111;
+        --muted: #3e3e3e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: 'Trebuchet MS', 'Verdana', sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+          radial-gradient(circle at 74% 9%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 87% 36%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+          radial-gradient(circle at 21% 63%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+          radial-gradient(circle at 60% 71%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 94% 81%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+          radial-gradient(circle at 43% 91%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+          #111;
+        background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, 290px 290px,
+          350px 350px, 300px 300px, auto;
+      }
+
+      .page {
+        width: min(1380px, calc(100vw - 24px));
+        margin: 0 auto;
+        padding: 18px 0 28px;
+      }
+
+      .masthead {
+        text-align: center;
+        margin-bottom: 22px;
+      }
+
+      .title,
+      .subtitle {
+        font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--mint);
+        text-shadow: 4px 4px 0 var(--mint-shadow);
+      }
+
+      .title {
+        font-size: clamp(34px, 5.7vw, 78px);
+        line-height: 0.94;
+        margin: 0;
+      }
+
+      .subtitle {
+        font-size: clamp(24px, 3vw, 46px);
+        line-height: 0.95;
+        margin: 10px 0 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 8px;
+      }
+
+      .member-card {
+        background: var(--panel);
+        border: 2px solid var(--panel-line);
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
+        padding: 6px 6px 8px;
+        text-align: center;
+        min-height: 176px;
+      }
+
+      .member-top {
+        min-height: 34px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1px;
+      }
+
+      .member-name {
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.05;
+        word-break: break-word;
+      }
+
+      .member-handle {
+        font-size: 10px;
+        line-height: 1.05;
+        color: var(--muted);
+        word-break: break-word;
+      }
+
+      .member-imageFrame {
+        height: 86px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        margin-top: 2px;
+      }
+
+      .member-image {
+        width: 78px;
+        height: auto;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+
+      .member-bottom {
+        margin-top: 4px;
+      }
+
+      .member-cat {
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.05;
+      }
+
+      .member-fav {
+        font-size: 10px;
+        line-height: 1.05;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .member-catName {
+        font-size: 10px;
+        line-height: 1.05;
+        color: var(--muted);
+        margin-top: 2px;
+        word-break: break-word;
+      }
+
+      .loading,
+      .error {
+        background: rgba(240, 244, 223, 0.95);
+        border: 2px solid var(--panel-line);
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
+        padding: 18px 20px;
+        text-align: center;
+        font-size: 18px;
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: min(100vw - 18px, 860px);
+          padding-top: 14px;
+        }
+
+        .grid {
+          grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+          gap: 7px;
+        }
+
+        .member-card {
+          min-height: 168px;
+          padding: 6px 5px 8px;
+        }
+
+        .member-imageFrame {
+          height: 80px;
+        }
+
+        .member-image {
+          width: 72px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <h1 class="title">Day 1 MoonCat Club</h1>
+        <div class="subtitle">Hall of Fame</div>
+      </header>
+      <div id="app" class="loading">Loading members...</div>
+    </main>
+
+    <script>
+      function titleCase(value) {
+        return value
+          .split(/[\s_-]+/)
+          .filter(Boolean)
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ')
+      }
+
+      function stripEth(value) {
+        return typeof value === 'string' ? value.replace(/\.eth$/i, '') : ''
+      }
+
+      function normalizeTwitter(value) {
+        if (typeof value !== 'string' || value.length === 0) return null
+        return value.startsWith('@') ? value : '@' + value
+      }
+
+      function getDisplayName(member) {
+        if (typeof member.name === 'string' && member.name.trim().length > 0) {
+          return member.name.trim()
+        }
+
+        const root = stripEth(member.ensName)
+        return titleCase(root)
+      }
+
+      function getHandle(member) {
+        const twitter = normalizeTwitter(member.twitter)
+        if (twitter !== null) return twitter
+        return '(' + member.ensName + ')'
+      }
+
+      function getCatImage(catId) {
+        return LibMoonCat.generateImage(catId)
+      }
+
+      function renderMember(member) {
+        const card = document.createElement('article')
+        card.className = 'member-card'
+
+        const top = document.createElement('div')
+        top.className = 'member-top'
+
+        const name = document.createElement('div')
+        name.className = 'member-name'
+        name.textContent = getDisplayName(member)
+
+        const handle = document.createElement('div')
+        handle.className = 'member-handle'
+        handle.textContent = getHandle(member)
+
+        top.appendChild(name)
+        top.appendChild(handle)
+
+        const imageFrame = document.createElement('div')
+        imageFrame.className = 'member-imageFrame'
+
+        const img = document.createElement('img')
+        img.className = 'member-image'
+        img.alt = 'MoonCat #' + member.rescueIndex
+        img.src = getCatImage(member.catId)
+        imageFrame.appendChild(img)
+
+        const bottom = document.createElement('div')
+        bottom.className = 'member-bottom'
+
+        const cat = document.createElement('div')
+        cat.className = 'member-cat'
+        cat.textContent = 'MoonCat #' + member.rescueIndex
+        bottom.appendChild(cat)
+
+        if (typeof member.catName === 'string' && member.catName.trim().length > 0) {
+          const catName = document.createElement('div')
+          catName.className = 'member-catName'
+          catName.textContent = member.catName.trim()
+          bottom.appendChild(catName)
+        }
+
+        if (
+          typeof member.favourite === 'number' &&
+          member.favourite !== member.rescueIndex
+        ) {
+          const fav = document.createElement('div')
+          fav.className = 'member-fav'
+          fav.textContent = 'Fav #' + member.favourite
+          bottom.appendChild(fav)
+        }
+
+        card.appendChild(top)
+        card.appendChild(imageFrame)
+        card.appendChild(bottom)
+
+        return card
+      }
+
+      async function start() {
+        const app = document.getElementById('app')
+
+        try {
+          const response = await fetch('./members.json')
+          if (!response.ok) {
+            throw new Error('Failed to load members.json')
+          }
+
+          const members = await response.json()
+          members.sort((a, b) => a.rescueIndex - b.rescueIndex)
+
+          const grid = document.createElement('section')
+          grid.className = 'grid'
+
+          members.forEach((member) => {
+            grid.appendChild(renderMember(member))
+          })
+
+          app.className = 'grid'
+          app.textContent = ''
+          app.replaceWith(grid)
+        } catch (error) {
+          console.error(error)
+          app.className = 'error'
+          app.textContent = 'Could not load Day 1 members.'
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', start)
+    </script>
+  </body>
+</html>

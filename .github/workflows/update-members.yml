@@ -1,0 +1,42 @@
+name: Update Members
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-members:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Rebuild Members
+        run: npm run build
+
+      - name: Commit Updated members.json
+        run: |
+          if git diff --quiet -- public/members.json; then
+            echo "No changes to public/members.json"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/members.json
+          git commit -m "chore: update members.json"
+          git push
