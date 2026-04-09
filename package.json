@@ -1,0 +1,15 @@
+{
+  "name": "mooncats-hof-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MoonCats Hall of Fame static website",
+  "scripts": {
+    "build": "node scripts/dayoneclub.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.38.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
