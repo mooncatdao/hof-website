@@ -139,7 +139,7 @@ async function getOutgoingDelegations(address) {
 async function main() {
   const dayOneOwners = []
 
-  for (let rescueIndex = 0; rescueIndex < 491; rescueIndex++) {
+  for (let rescueIndex = 0; rescueIndex <= 491; rescueIndex++) {
     const ownerAddress = await getOwnerOfRescueIndex(rescueIndex)
 
     if (ownerAddress === false) continue
