@@ -441,6 +441,12 @@
     "catId": "0x00419137c8"
   },
   {
+    "rescueIndex": 438,
+    "ownerAddress": "0xCA014D87081e6397f80cfF355f50a1D2fEc089EF",
+    "ensName": "zokap.eth",
+    "catId": "0x00f52f73e0"
+  },
+  {
     "rescueIndex": 453,
     "ownerAddress": "0xa8E7A10D2eB9F59840a7eD6D4484956124588cF3",
     "ensName": "lasagnafund.eth",
