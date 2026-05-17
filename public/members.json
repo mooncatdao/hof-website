@@ -453,6 +453,12 @@
     "catId": "0x0000352b65"
   },
   {
+    "rescueIndex": 462,
+    "ownerAddress": "0x7FE329A60F5b86F8BC9fA2ecfEBBD7596E5964Ed",
+    "ensName": "herrenklub.eth",
+    "catId": "0x006d8ad257"
+  },
+  {
     "rescueIndex": 476,
     "ownerAddress": "0x6511EFA5E206e64C291820E6D04646Cc6f066BFe",
     "ensName": "collection.vidpet.eth",
