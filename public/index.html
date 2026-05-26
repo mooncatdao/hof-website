@@ -83,12 +83,23 @@
       }
 
       .member-card {
+        --mooncat-width: 87px;
+        display: grid;
+        grid-template-rows: 28px 90px 28px;
         background: var(--panel);
         border: 2px solid var(--panel-line);
         box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
-        padding: 6px 6px 8px;
+        padding: 4px 6px 4px;
         text-align: center;
-        min-height: 176px;
+        min-height: 146px;
+      }
+
+      .member-card[data-pose='standing'] {
+        --mooncat-width: 91px;
+      }
+
+      .member-card[data-pose='pouncing'] {
+        --mooncat-width: 74px;
       }
 
       .member-top {
@@ -114,22 +125,23 @@
       }
 
       .member-imageFrame {
-        height: 86px;
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
         margin-top: 2px;
       }
 
       .member-image {
-        width: 78px;
+        width: var(--mooncat-width);
         height: auto;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
 
       .member-bottom {
-        margin-top: 4px;
+        align-self: end;
+        min-height: 28px;
+        margin-top: 0;
       }
 
       .member-cat {
@@ -175,16 +187,18 @@
         }
 
         .member-card {
+          --mooncat-width: 80px;
+          grid-template-rows: 34px 90px 28px;
           min-height: 168px;
           padding: 6px 5px 8px;
         }
 
-        .member-imageFrame {
-          height: 80px;
+        .member-card[data-pose='standing'] {
+          --mooncat-width: 84px;
         }
 
-        .member-image {
-          width: 72px;
+        .member-card[data-pose='pouncing'] {
+          --mooncat-width: 68px;
         }
       }
     </style>
@@ -216,6 +230,10 @@
         return value.startsWith('@') ? value : '@' + value
       }
 
+      function getCatId(rescueIndex) {
+        return LibMoonCat.getCatId(rescueIndex)
+      }
+
       function getDisplayName(member) {
         if (typeof member.name === 'string' && member.name.trim().length > 0) {
           return member.name.trim()
@@ -226,18 +244,91 @@
       }
 
       function getHandle(member) {
+        if (typeof member.handle === 'string') return member.handle.trim()
+
         const twitter = normalizeTwitter(member.twitter)
         if (twitter !== null) return twitter
-        return '(' + member.ensName + ')'
+        return typeof member.ensName === 'string' ? '(' + member.ensName + ')' : ''
       }
 
-      function getCatImage(catId) {
-        return LibMoonCat.generateImage(catId)
+      function getGeneratedCatImage(member) {
+        return LibMoonCat.generateImage(member.catId || getCatId(member.rescueIndex))
+      }
+
+      function getImageMode(member) {
+        return typeof member.imageMode === 'string' && member.imageMode.trim().length > 0
+          ? member.imageMode.trim()
+          : 'regular'
+      }
+
+      function getCachedCatImage(member) {
+        return './assets/mooncats/' + getImageMode(member) + '/' + member.rescueIndex + '.png'
+      }
+
+      function getPoseByRescueIndex(manifest) {
+        const poseByRescueIndex = new Map()
+
+        if (!Array.isArray(manifest?.files)) return poseByRescueIndex
+
+        manifest.files.forEach((file) => {
+          if (
+            file.mode === 'regular' &&
+            Number.isInteger(file.rescueIndex) &&
+            typeof file.pose === 'string'
+          ) {
+            poseByRescueIndex.set(file.rescueIndex, file.pose)
+          }
+        })
+
+        return poseByRescueIndex
+      }
+
+      function applyOverrides(members, overrides, imageManifest) {
+        const generatedByRescueIndex = new Map(
+          members.map((member) => [member.rescueIndex, member]),
+        )
+        const poseByRescueIndex = getPoseByRescueIndex(imageManifest)
+        const overrideMembers = Array.isArray(overrides?.members)
+          ? overrides.members
+          : []
+
+        if (overrideMembers.length === 0) {
+          return [...members].sort((a, b) => a.rescueIndex - b.rescueIndex)
+        }
+
+        return overrideMembers
+          .map((override, index) => {
+            const rescueIndex = Number(override.rescueIndex)
+            const generated = generatedByRescueIndex.get(rescueIndex) || {}
+
+            return {
+              ...generated,
+              ...override,
+              rescueIndex,
+              sortOrder: index,
+              catId: override.catId || generated.catId || getCatId(rescueIndex),
+              pose: override.pose || generated.pose || poseByRescueIndex.get(rescueIndex),
+            }
+          })
+          .filter((member) => Number.isInteger(member.rescueIndex))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+      }
+
+      async function loadJson(path, required = true) {
+        const response = await fetch(path)
+
+        if (!response.ok) {
+          if (!required) return null
+          throw new Error('Failed to load ' + path)
+        }
+
+        return response.json()
       }
 
       function renderMember(member) {
         const card = document.createElement('article')
         card.className = 'member-card'
+        if (typeof member.pose === 'string') card.dataset.pose = member.pose
 
         const top = document.createElement('div')
         top.className = 'member-top'
@@ -259,7 +350,11 @@
         const img = document.createElement('img')
         img.className = 'member-image'
         img.alt = 'MoonCat #' + member.rescueIndex
-        img.src = getCatImage(member.catId)
+        img.src = getCachedCatImage(member)
+        img.onerror = () => {
+          img.onerror = null
+          img.src = getGeneratedCatImage(member)
+        }
         imageFrame.appendChild(img)
 
         const bottom = document.createElement('div')
@@ -298,13 +393,12 @@
         const app = document.getElementById('app')
 
         try {
-          const response = await fetch('./members.json')
-          if (!response.ok) {
-            throw new Error('Failed to load members.json')
-          }
-
-          const members = await response.json()
-          members.sort((a, b) => a.rescueIndex - b.rescueIndex)
+          const [generatedMembers, overrides, imageManifest] = await Promise.all([
+            loadJson('./members.json'),
+            loadJson('./overrides.json', false),
+            loadJson('./assets/mooncats/manifest.json', false),
+          ])
+          const members = applyOverrides(generatedMembers, overrides, imageManifest)
 
           const grid = document.createElement('section')
           grid.className = 'grid'
