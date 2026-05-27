@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonCat Hall of Fame Admin</title>
+    <link href="https://fonts.cdnfonts.com/css/setback" rel="stylesheet" />
+    <link rel="preload" href="./libmooncat-limited.js" as="script" />
+    <link rel="preload" href="./admin-core.js" as="script" />
+    <script src="./libmooncat-limited.js"></script>
+    <script src="./admin-core.js"></script>
+    <style>
+      :root {
+        --bg: #101010;
+        --panel: #f0f4df;
+        --panel-line: #151515;
+        --mint: #79ef76;
+        --mint-shadow: #2f8a4c;
+        --text: #111111;
+        --muted: #3e3e3e;
+        --surface: #fffdf2;
+        --surface-line: #c6c9b9;
+        --danger: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: 'Trebuchet MS', 'Verdana', sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+          radial-gradient(circle at 74% 9%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 87% 36%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+          radial-gradient(circle at 21% 63%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+          #111;
+        background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, auto;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        min-height: 34px;
+        border: 2px solid var(--panel-line);
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+        box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.65);
+      }
+
+      button:hover {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.65);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        transform: none;
+      }
+
+      label {
+        display: grid;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      input,
+      select {
+        min-width: 0;
+        min-height: 34px;
+        border: 1px solid var(--surface-line);
+        background: #fff;
+        color: var(--text);
+        padding: 6px 7px;
+      }
+
+      .page {
+        width: min(1680px, calc(100vw - 24px));
+        margin: 0 auto;
+        padding: 16px 0 28px;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 14px;
+      }
+
+      .title {
+        font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+        font-size: clamp(28px, 4vw, 54px);
+        line-height: 0.95;
+        margin: 0;
+        color: var(--mint);
+        text-shadow: 3px 3px 0 var(--mint-shadow);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .status {
+        min-height: 22px;
+        color: var(--panel);
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .auth-status {
+        min-height: 22px;
+        color: var(--panel);
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(460px, 610px) 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .editor,
+      .preview {
+        background: rgba(240, 244, 223, 0.96);
+        border: 2px solid var(--panel-line);
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
+      }
+
+      .editor {
+        max-height: calc(100vh - 112px);
+        overflow: auto;
+      }
+
+      .editor-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        align-items: center;
+        background: var(--panel);
+        border-bottom: 2px solid var(--panel-line);
+        padding: 8px;
+      }
+
+      .validation {
+        display: grid;
+        gap: 8px;
+        border-bottom: 2px solid var(--panel-line);
+        background: #e3ead0;
+        padding: 8px;
+      }
+
+      .validation-summary {
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+
+      .validation-list {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+        padding-left: 18px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .validation-list:empty {
+        display: none;
+      }
+
+      .warning {
+        color: #7a4b00;
+      }
+
+      .count {
+        font-weight: 700;
+      }
+
+      .rows {
+        display: grid;
+        gap: 8px;
+        padding: 8px;
+      }
+
+      .entry {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--surface-line);
+        padding: 8px;
+      }
+
+      .entry-number {
+        display: grid;
+        align-content: start;
+        gap: 6px;
+      }
+
+      .entry-index {
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .icon-button {
+        width: 34px;
+        padding: 0;
+      }
+
+      .entry-fields {
+        display: grid;
+        grid-template-columns: 80px repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .wide {
+        grid-column: span 2;
+      }
+
+      .entry-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .entry-meta {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .danger {
+        color: var(--danger);
+      }
+
+      .preview {
+        padding: 10px;
+      }
+
+      .preview-frame {
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+          radial-gradient(circle at 74% 9%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 87% 36%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+          radial-gradient(circle at 21% 63%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+          #111;
+        background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, auto;
+        padding: 16px 10px 18px;
+        min-height: calc(100vh - 134px);
+      }
+
+      .preview-title,
+      .preview-subtitle {
+        font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        color: var(--mint);
+        text-align: center;
+        text-shadow: 3px 3px 0 var(--mint-shadow);
+      }
+
+      .preview-title {
+        font-size: clamp(30px, 5vw, 62px);
+        line-height: 0.94;
+        margin: 0;
+      }
+
+      .preview-subtitle {
+        font-size: clamp(22px, 2.6vw, 38px);
+        line-height: 0.95;
+        margin: 8px 0 18px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 8px;
+      }
+
+      .member-card {
+        --mooncat-width: 87px;
+        display: grid;
+        grid-template-rows: 28px 90px 28px;
+        background: var(--panel);
+        border: 2px solid var(--panel-line);
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
+        padding: 4px 6px;
+        text-align: center;
+        min-height: 146px;
+      }
+
+      .member-card[data-pose='standing'] {
+        --mooncat-width: 91px;
+      }
+
+      .member-card[data-pose='pouncing'] {
+        --mooncat-width: 74px;
+      }
+
+      .member-top {
+        min-height: 34px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1px;
+      }
+
+      .member-name {
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.05;
+        word-break: break-word;
+      }
+
+      .member-handle {
+        font-size: 10px;
+        line-height: 1.05;
+        color: var(--muted);
+        word-break: break-word;
+      }
+
+      .member-imageFrame {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2px;
+      }
+
+      .member-image {
+        width: var(--mooncat-width);
+        height: auto;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+
+      .member-bottom {
+        align-self: end;
+        min-height: 28px;
+        margin-top: 0;
+      }
+
+      .member-cat {
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.05;
+      }
+
+      .member-catName,
+      .member-fav {
+        font-size: 10px;
+        line-height: 1.05;
+        color: var(--muted);
+        margin-top: 2px;
+        word-break: break-word;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 980px) {
+        .masthead {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .actions {
+          justify-content: flex-start;
+        }
+
+        .status {
+          text-align: left;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .editor {
+          max-height: none;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: min(100vw - 18px, 860px);
+        }
+
+        .entry-fields {
+          grid-template-columns: 1fr;
+        }
+
+        .wide {
+          grid-column: auto;
+        }
+
+        .grid {
+          grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+          gap: 7px;
+        }
+
+        .member-card {
+          --mooncat-width: 80px;
+          grid-template-rows: 34px 90px 28px;
+          min-height: 168px;
+          padding: 6px 5px 8px;
+        }
+
+        .member-card[data-pose='standing'] {
+          --mooncat-width: 84px;
+        }
+
+        .member-card[data-pose='pouncing'] {
+          --mooncat-width: 68px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <div>
+          <h1 class="title">Hall of Fame Admin</h1>
+          <div id="status" class="status">Loading...</div>
+        </div>
+        <div class="actions">
+          <button id="loginButton" type="button">GitHub Login</button>
+          <button id="logoutButton" type="button" class="hidden">Logout</button>
+          <button id="reloadButton" type="button">Reload</button>
+          <button id="importButton" type="button">Import JSON</button>
+          <button id="exportButton" type="button">Export JSON</button>
+          <a href="./" aria-label="Open public Hall of Fame"><button type="button">View Site</button></a>
+        </div>
+        <div id="authStatus" class="auth-status">Checking GitHub login...</div>
+      </header>
+
+      <input id="fileInput" class="hidden" type="file" accept="application/json,.json" />
+
+      <section class="workspace">
+        <div class="editor">
+          <div class="editor-toolbar">
+            <div id="count" class="count">0 cards</div>
+            <button id="addButton" type="button">Add Card</button>
+            <button id="sortButton" type="button">Sort by #</button>
+          </div>
+          <div class="validation">
+            <div id="validationSummary" class="validation-summary">No cards loaded</div>
+            <ul id="validationErrors" class="validation-list danger"></ul>
+            <ul id="validationWarnings" class="validation-list warning"></ul>
+          </div>
+          <div id="rows" class="rows"></div>
+        </div>
+
+        <div class="preview">
+          <div class="preview-frame">
+            <h2 class="preview-title">Day 1 MoonCat Club</h2>
+            <div class="preview-subtitle">Hall of Fame</div>
+            <div id="previewGrid" class="grid"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        members: [],
+        generatedByRescueIndex: new Map(),
+        poseByRescueIndex: new Map(),
+        cachedImages: new Set(),
+        isDirty: false,
+      }
+
+      const fields = ['rescueIndex', 'name', 'handle', 'catName']
+      const adminCore = window.AdminCore
+
+      function setStatus(message, isError = false) {
+        const status = document.getElementById('status')
+        status.textContent = message
+        status.classList.toggle('danger', isError)
+      }
+
+      function setAuthStatus(message, isError = false) {
+        const authStatus = document.getElementById('authStatus')
+        authStatus.textContent = message
+        authStatus.classList.toggle('danger', isError)
+      }
+
+      function normalizeTwitter(value) {
+        return adminCore.normalizeTwitter(value)
+      }
+
+      function stripEth(value) {
+        return adminCore.stripEth(value)
+      }
+
+      function titleCase(value) {
+        return adminCore.titleCase(value)
+      }
+
+      function getCatId(rescueIndex) {
+        return LibMoonCat.getCatId(rescueIndex)
+      }
+
+      function parseRescueIndex(value) {
+        return adminCore.parseRescueIndex(value)
+      }
+
+      function getDisplayName(member) {
+        if (typeof member.name === 'string' && member.name.trim().length > 0) {
+          return member.name.trim()
+        }
+
+        return titleCase(stripEth(member.ensName))
+      }
+
+      function getHandle(member) {
+        if (typeof member.handle === 'string') return member.handle.trim()
+        const twitter = normalizeTwitter(member.twitter)
+        if (twitter.length > 0) return twitter
+        return typeof member.ensName === 'string' ? '(' + member.ensName + ')' : ''
+      }
+
+      function getCachedCatImage(member) {
+        return './assets/mooncats/regular/' + member.rescueIndex + '.png'
+      }
+
+      function getCachedImageKey(member) {
+        return adminCore.getCachedImageKey(member)
+      }
+
+      function getCacheStatus(member) {
+        return adminCore.getCacheStatus(member, state.cachedImages)
+      }
+
+      function getGeneratedCatImage(member) {
+        return LibMoonCat.generateImage(member.catId || getCatId(member.rescueIndex))
+      }
+
+      function loadJson(path, required = true) {
+        return fetch(path).then((response) => {
+          if (!response.ok) {
+            if (!required) return null
+            throw new Error('Failed to load ' + path)
+          }
+
+          return response.json()
+        })
+      }
+
+      function getPoseByRescueIndex(manifest) {
+        return adminCore.getPoseByRescueIndex(manifest)
+      }
+
+      function getCachedImages(manifest) {
+        return adminCore.getCachedImages(manifest)
+      }
+
+      function getMergedMember(member) {
+        const rescueIndex = parseRescueIndex(member.rescueIndex)
+        if (rescueIndex === null) return { ...member, rescueIndex: null }
+
+        const generated = state.generatedByRescueIndex.get(rescueIndex) || {}
+
+        return {
+          ...generated,
+          ...member,
+          rescueIndex,
+          catId: member.catId || generated.catId || getCatId(rescueIndex),
+          pose: member.pose || generated.pose || state.poseByRescueIndex.get(rescueIndex),
+        }
+      }
+
+      function cleanMember(member) {
+        return adminCore.cleanMember(member)
+      }
+
+      function getExportJson() {
+        return adminCore.getExportJson(state.members)
+      }
+
+      function getValidation() {
+        return adminCore.validateMembers(state.members, state.cachedImages)
+      }
+
+      function downloadOverrides() {
+        const validation = getValidation()
+        if (validation.errors.length > 0) {
+          setStatus('Fix validation errors before exporting', true)
+          renderValidation(validation)
+          return
+        }
+
+        const blob = new Blob([getExportJson()], { type: 'application/json' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = 'overrides.json'
+        document.body.appendChild(link)
+        link.click()
+        URL.revokeObjectURL(link.href)
+        link.remove()
+        state.isDirty = false
+        setStatus('Exported overrides.json')
+      }
+
+      function setDirty() {
+        state.isDirty = true
+        setStatus('Unsaved changes')
+      }
+
+      function moveMember(index, direction) {
+        const nextIndex = index + direction
+        if (nextIndex < 0 || nextIndex >= state.members.length) return
+
+        const nextMembers = [...state.members]
+        const current = nextMembers[index]
+        nextMembers[index] = nextMembers[nextIndex]
+        nextMembers[nextIndex] = current
+        state.members = nextMembers
+        setDirty()
+        render()
+      }
+
+      function removeMember(index) {
+        state.members = state.members.filter((_, memberIndex) => memberIndex !== index)
+        setDirty()
+        render()
+      }
+
+      function addMember() {
+        state.members = [
+          ...state.members,
+          {
+            rescueIndex: '',
+            name: '',
+            handle: '',
+            catName: '',
+          },
+        ]
+        setDirty()
+        render()
+      }
+
+      function sortMembers() {
+        state.members = [...state.members].sort(
+          (a, b) =>
+            (parseRescueIndex(a.rescueIndex) ?? 999999) -
+            (parseRescueIndex(b.rescueIndex) ?? 999999),
+        )
+        setDirty()
+        render()
+      }
+
+      function updateMember(index, field, value) {
+        state.members[index] = {
+          ...state.members[index],
+          [field]: value,
+        }
+        setDirty()
+        renderValidation()
+        renderRows()
+        renderPreview()
+        updateCount()
+      }
+
+      function getGeneratedMeta(rescueIndex) {
+        const generated = state.generatedByRescueIndex.get(Number(rescueIndex))
+        if (typeof generated === 'undefined') return ''
+
+        const pieces = [generated.ensName, generated.twitter, generated.name]
+          .filter((piece) => typeof piece === 'string' && piece.trim().length > 0)
+
+        return pieces.join(' / ')
+      }
+
+      function renderRows() {
+        const rows = document.getElementById('rows')
+        rows.textContent = ''
+
+        state.members.forEach((member, index) => {
+          const row = document.createElement('article')
+          row.className = 'entry'
+
+          const number = document.createElement('div')
+          number.className = 'entry-number'
+
+          const entryIndex = document.createElement('div')
+          entryIndex.className = 'entry-index'
+          entryIndex.textContent = String(index + 1)
+          number.appendChild(entryIndex)
+
+          const up = document.createElement('button')
+          up.className = 'icon-button'
+          up.type = 'button'
+          up.textContent = 'Up'
+          up.disabled = index === 0
+          up.addEventListener('click', () => moveMember(index, -1))
+          number.appendChild(up)
+
+          const down = document.createElement('button')
+          down.className = 'icon-button'
+          down.type = 'button'
+          down.textContent = 'Dn'
+          down.disabled = index === state.members.length - 1
+          down.addEventListener('click', () => moveMember(index, 1))
+          number.appendChild(down)
+
+          row.appendChild(number)
+
+          const content = document.createElement('div')
+
+          const fieldGrid = document.createElement('div')
+          fieldGrid.className = 'entry-fields'
+
+          fieldGrid.appendChild(createField(index, member, 'rescueIndex', '#', 'number'))
+          fieldGrid.appendChild(createField(index, member, 'name', 'Name'))
+          fieldGrid.appendChild(createField(index, member, 'handle', 'Handle'))
+          fieldGrid.appendChild(createField(index, member, 'catName', 'Cat name', 'text', true))
+          content.appendChild(fieldGrid)
+
+          const footer = document.createElement('div')
+          footer.className = 'entry-footer'
+
+          const meta = document.createElement('div')
+          meta.className = 'entry-meta'
+          const generatedMeta = getGeneratedMeta(member.rescueIndex)
+          const cacheStatus = getCacheStatus(member)
+          meta.textContent = generatedMeta.length > 0
+            ? generatedMeta + ' | ' + cacheStatus
+            : cacheStatus
+          footer.appendChild(meta)
+
+          const remove = document.createElement('button')
+          remove.className = 'danger'
+          remove.type = 'button'
+          remove.textContent = 'Remove'
+          remove.addEventListener('click', () => removeMember(index))
+          footer.appendChild(remove)
+
+          content.appendChild(footer)
+          row.appendChild(content)
+          rows.appendChild(row)
+        })
+      }
+
+      function createField(index, member, field, labelText, type = 'text', isWide = false) {
+        const label = document.createElement('label')
+        if (isWide) label.className = 'wide'
+        label.textContent = labelText
+
+        const input = document.createElement('input')
+        input.type = type
+        input.value = member[field] ?? ''
+        input.addEventListener('input', () => updateMember(index, field, input.value))
+        label.appendChild(input)
+
+        return label
+      }
+
+      function renderMember(member) {
+        const card = document.createElement('article')
+        card.className = 'member-card'
+        if (typeof member.pose === 'string') card.dataset.pose = member.pose
+
+        const top = document.createElement('div')
+        top.className = 'member-top'
+
+        const name = document.createElement('div')
+        name.className = 'member-name'
+        name.textContent = getDisplayName(member)
+
+        const handle = document.createElement('div')
+        handle.className = 'member-handle'
+        handle.textContent = getHandle(member)
+
+        top.appendChild(name)
+        top.appendChild(handle)
+
+        const imageFrame = document.createElement('div')
+        imageFrame.className = 'member-imageFrame'
+
+        const img = document.createElement('img')
+        img.className = 'member-image'
+        img.alt = 'MoonCat #' + member.rescueIndex
+        img.src = getCachedCatImage(member)
+        img.onerror = () => {
+          img.onerror = null
+          img.src = getGeneratedCatImage(member)
+        }
+        imageFrame.appendChild(img)
+
+        const bottom = document.createElement('div')
+        bottom.className = 'member-bottom'
+
+        const cat = document.createElement('div')
+        cat.className = 'member-cat'
+        cat.textContent = 'MoonCat #' + member.rescueIndex
+        bottom.appendChild(cat)
+
+        if (typeof member.catName === 'string' && member.catName.trim().length > 0) {
+          const catName = document.createElement('div')
+          catName.className = 'member-catName'
+          catName.textContent = member.catName.trim()
+          bottom.appendChild(catName)
+        }
+
+        card.appendChild(top)
+        card.appendChild(imageFrame)
+        card.appendChild(bottom)
+
+        return card
+      }
+
+      function renderPreview() {
+        const previewGrid = document.getElementById('previewGrid')
+        previewGrid.textContent = ''
+
+        state.members
+          .map(getMergedMember)
+          .filter((member) => member.rescueIndex !== null)
+          .forEach((member) => {
+            previewGrid.appendChild(renderMember(member))
+          })
+      }
+
+      function updateCount() {
+        document.getElementById('count').textContent = `${state.members.length} cards`
+      }
+
+      function renderValidation(validation = getValidation()) {
+        const summary = document.getElementById('validationSummary')
+        const errors = document.getElementById('validationErrors')
+        const warnings = document.getElementById('validationWarnings')
+        const exportButton = document.getElementById('exportButton')
+
+        summary.textContent =
+          validation.errors.length === 0
+            ? `${validation.exportableCount} exportable cards, ${validation.warnings.length} warnings`
+            : `${validation.errors.length} errors, ${validation.warnings.length} warnings`
+
+        errors.textContent = ''
+        warnings.textContent = ''
+
+        validation.errors.forEach((error) => {
+          const item = document.createElement('li')
+          item.textContent = error.message
+          errors.appendChild(item)
+        })
+
+        validation.warnings.forEach((warning) => {
+          const item = document.createElement('li')
+          item.textContent = warning.message
+          warnings.appendChild(item)
+        })
+
+        exportButton.disabled = validation.errors.length > 0
+      }
+
+      function render() {
+        updateCount()
+        renderValidation()
+        renderRows()
+        renderPreview()
+      }
+
+      function importJson(file) {
+        if (typeof file === 'undefined') return
+
+        file.text()
+          .then((text) => {
+            const parsed = JSON.parse(text)
+            if (!Array.isArray(parsed.members)) {
+              throw new Error('JSON must contain a members array')
+            }
+
+            state.members = parsed.members.map((member) => ({ ...member }))
+            state.isDirty = true
+            setStatus('Imported JSON')
+            render()
+          })
+          .catch((error) => {
+            console.error(error)
+            setStatus(error.message, true)
+          })
+      }
+
+      function start() {
+        const params = new URLSearchParams(window.location.search)
+        const authError = params.get('auth_error')
+
+        if (authError !== null) {
+          setAuthStatus(authError, true)
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
+
+        Promise.all([
+          loadJson('./members.json'),
+          loadJson('./overrides.json'),
+          loadJson('./assets/mooncats/manifest.json', false),
+        ])
+          .then(([generatedMembers, overrides, manifest]) => {
+            state.generatedByRescueIndex = new Map(
+              generatedMembers.map((member) => [member.rescueIndex, member]),
+            )
+            state.poseByRescueIndex = getPoseByRescueIndex(manifest)
+            state.cachedImages = getCachedImages(manifest)
+            state.members = overrides.members.map((member) => ({ ...member }))
+            state.isDirty = false
+            setStatus('Loaded overrides.json')
+            render()
+          })
+          .catch((error) => {
+            console.error(error)
+            setStatus(error.message, true)
+          })
+      }
+
+      function refreshAuthStatus() {
+        fetch('./api/auth/status')
+          .then((response) => {
+            if (!response.ok) throw new Error('GitHub login is unavailable in this environment')
+            return response.json()
+          })
+          .then((data) => {
+            const loginButton = document.getElementById('loginButton')
+            const logoutButton = document.getElementById('logoutButton')
+
+            if (data.authenticated) {
+              const user = data.user || {}
+              setAuthStatus(`Logged in as ${user.login} (${user.githubOrg})`)
+              loginButton.classList.add('hidden')
+              logoutButton.classList.remove('hidden')
+              return
+            }
+
+            setAuthStatus('Not logged in with GitHub')
+            loginButton.classList.remove('hidden')
+            logoutButton.classList.add('hidden')
+          })
+          .catch(() => {
+            setAuthStatus('GitHub login unavailable on this static server')
+            document.getElementById('loginButton').classList.add('hidden')
+            document.getElementById('logoutButton').classList.add('hidden')
+          })
+      }
+
+      function logout() {
+        fetch('./api/auth/logout', { method: 'POST' })
+          .then(() => refreshAuthStatus())
+          .catch(() => setAuthStatus('Could not log out', true))
+      }
+
+      window.addEventListener('beforeunload', (event) => {
+        if (!state.isDirty) return
+
+        event.preventDefault()
+        event.returnValue = ''
+      })
+
+      document.getElementById('addButton').addEventListener('click', addMember)
+      document.getElementById('sortButton').addEventListener('click', sortMembers)
+      document.getElementById('exportButton').addEventListener('click', downloadOverrides)
+      document.getElementById('reloadButton').addEventListener('click', start)
+      document.getElementById('loginButton').addEventListener('click', () => {
+        window.location.href = './api/auth/login'
+      })
+      document.getElementById('logoutButton').addEventListener('click', logout)
+      document.getElementById('importButton').addEventListener('click', () => {
+        document.getElementById('fileInput').click()
+      })
+      document.getElementById('fileInput').addEventListener('change', (event) => {
+        importJson(event.target.files[0])
+        event.target.value = ''
+      })
+
+      window.addEventListener('DOMContentLoaded', start)
+      window.addEventListener('DOMContentLoaded', refreshAuthStatus)
+    </script>
+  </body>
+</html>

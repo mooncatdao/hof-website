@@ -1,9 +1,5 @@
 {
-  "generatedAt": "2026-05-26T17:43:36.763Z",
   "apiBaseUrl": "https://api.mooncat.community",
-  "modes": [
-    "regular"
-  ],
   "rescueIndexes": [
     2,
     9,
@@ -52,7 +48,6 @@
   ],
   "files": [
     {
-      "mode": "regular",
       "rescueIndex": 2,
       "status": "skipped",
       "size": 1309,
@@ -63,7 +58,6 @@
       "url": "https://api.mooncat.community/regular-image/2"
     },
     {
-      "mode": "regular",
       "rescueIndex": 9,
       "status": "skipped",
       "size": 941,
@@ -74,7 +68,6 @@
       "url": "https://api.mooncat.community/regular-image/9"
     },
     {
-      "mode": "regular",
       "rescueIndex": 10,
       "status": "skipped",
       "size": 1272,
@@ -85,7 +78,6 @@
       "url": "https://api.mooncat.community/regular-image/10"
     },
     {
-      "mode": "regular",
       "rescueIndex": 16,
       "status": "skipped",
       "size": 1060,
@@ -96,7 +88,6 @@
       "url": "https://api.mooncat.community/regular-image/16"
     },
     {
-      "mode": "regular",
       "rescueIndex": 17,
       "status": "skipped",
       "size": 886,
@@ -107,7 +98,6 @@
       "url": "https://api.mooncat.community/regular-image/17"
     },
     {
-      "mode": "regular",
       "rescueIndex": 22,
       "status": "skipped",
       "size": 1063,
@@ -118,7 +108,6 @@
       "url": "https://api.mooncat.community/regular-image/22"
     },
     {
-      "mode": "regular",
       "rescueIndex": 31,
       "status": "skipped",
       "size": 1317,
@@ -129,7 +118,6 @@
       "url": "https://api.mooncat.community/regular-image/31"
     },
     {
-      "mode": "regular",
       "rescueIndex": 39,
       "status": "skipped",
       "size": 938,
@@ -140,7 +128,6 @@
       "url": "https://api.mooncat.community/regular-image/39"
     },
     {
-      "mode": "regular",
       "rescueIndex": 40,
       "status": "skipped",
       "size": 959,
@@ -151,7 +138,6 @@
       "url": "https://api.mooncat.community/regular-image/40"
     },
     {
-      "mode": "regular",
       "rescueIndex": 42,
       "status": "skipped",
       "size": 1303,
@@ -162,7 +148,6 @@
       "url": "https://api.mooncat.community/regular-image/42"
     },
     {
-      "mode": "regular",
       "rescueIndex": 56,
       "status": "skipped",
       "size": 939,
@@ -173,7 +158,6 @@
       "url": "https://api.mooncat.community/regular-image/56"
     },
     {
-      "mode": "regular",
       "rescueIndex": 67,
       "status": "skipped",
       "size": 1117,
@@ -184,7 +168,6 @@
       "url": "https://api.mooncat.community/regular-image/67"
     },
     {
-      "mode": "regular",
       "rescueIndex": 80,
       "status": "skipped",
       "size": 1284,
@@ -195,7 +178,6 @@
       "url": "https://api.mooncat.community/regular-image/80"
     },
     {
-      "mode": "regular",
       "rescueIndex": 84,
       "status": "skipped",
       "size": 1002,
@@ -206,7 +188,6 @@
       "url": "https://api.mooncat.community/regular-image/84"
     },
     {
-      "mode": "regular",
       "rescueIndex": 86,
       "status": "skipped",
       "size": 1157,
@@ -217,7 +198,6 @@
       "url": "https://api.mooncat.community/regular-image/86"
     },
     {
-      "mode": "regular",
       "rescueIndex": 87,
       "status": "skipped",
       "size": 1173,
@@ -228,7 +208,6 @@
       "url": "https://api.mooncat.community/regular-image/87"
     },
     {
-      "mode": "regular",
       "rescueIndex": 89,
       "status": "skipped",
       "size": 936,
@@ -239,7 +218,6 @@
       "url": "https://api.mooncat.community/regular-image/89"
     },
     {
-      "mode": "regular",
       "rescueIndex": 91,
       "status": "skipped",
       "size": 1294,
@@ -250,7 +228,6 @@
       "url": "https://api.mooncat.community/regular-image/91"
     },
     {
-      "mode": "regular",
       "rescueIndex": 93,
       "status": "skipped",
       "size": 945,
@@ -261,7 +238,6 @@
       "url": "https://api.mooncat.community/regular-image/93"
     },
     {
-      "mode": "regular",
       "rescueIndex": 95,
       "status": "skipped",
       "size": 1303,
@@ -272,7 +248,6 @@
       "url": "https://api.mooncat.community/regular-image/95"
     },
     {
-      "mode": "regular",
       "rescueIndex": 153,
       "status": "skipped",
       "size": 1196,
@@ -283,7 +258,6 @@
       "url": "https://api.mooncat.community/regular-image/153"
     },
     {
-      "mode": "regular",
       "rescueIndex": 196,
       "status": "skipped",
       "size": 1093,
@@ -294,7 +268,6 @@
       "url": "https://api.mooncat.community/regular-image/196"
     },
     {
-      "mode": "regular",
       "rescueIndex": 198,
       "status": "skipped",
       "size": 1297,
@@ -305,7 +278,6 @@
       "url": "https://api.mooncat.community/regular-image/198"
     },
     {
-      "mode": "regular",
       "rescueIndex": 205,
       "status": "skipped",
       "size": 1319,
@@ -316,7 +288,6 @@
       "url": "https://api.mooncat.community/regular-image/205"
     },
     {
-      "mode": "regular",
       "rescueIndex": 255,
       "status": "skipped",
       "size": 1208,
@@ -327,7 +298,6 @@
       "url": "https://api.mooncat.community/regular-image/255"
     },
     {
-      "mode": "regular",
       "rescueIndex": 258,
       "status": "skipped",
       "size": 1194,
@@ -338,7 +308,6 @@
       "url": "https://api.mooncat.community/regular-image/258"
     },
     {
-      "mode": "regular",
       "rescueIndex": 276,
       "status": "skipped",
       "size": 1123,
@@ -349,7 +318,6 @@
       "url": "https://api.mooncat.community/regular-image/276"
     },
     {
-      "mode": "regular",
       "rescueIndex": 297,
       "status": "skipped",
       "size": 942,
@@ -360,7 +328,6 @@
       "url": "https://api.mooncat.community/regular-image/297"
     },
     {
-      "mode": "regular",
       "rescueIndex": 300,
       "status": "skipped",
       "size": 925,
@@ -371,7 +338,6 @@
       "url": "https://api.mooncat.community/regular-image/300"
     },
     {
-      "mode": "regular",
       "rescueIndex": 302,
       "status": "skipped",
       "size": 898,
@@ -382,7 +348,6 @@
       "url": "https://api.mooncat.community/regular-image/302"
     },
     {
-      "mode": "regular",
       "rescueIndex": 304,
       "status": "skipped",
       "size": 1037,
@@ -393,7 +358,6 @@
       "url": "https://api.mooncat.community/regular-image/304"
     },
     {
-      "mode": "regular",
       "rescueIndex": 311,
       "status": "skipped",
       "size": 1328,
@@ -404,7 +368,6 @@
       "url": "https://api.mooncat.community/regular-image/311"
     },
     {
-      "mode": "regular",
       "rescueIndex": 351,
       "status": "skipped",
       "size": 953,
@@ -415,7 +378,6 @@
       "url": "https://api.mooncat.community/regular-image/351"
     },
     {
-      "mode": "regular",
       "rescueIndex": 392,
       "status": "skipped",
       "size": 958,
@@ -426,7 +388,6 @@
       "url": "https://api.mooncat.community/regular-image/392"
     },
     {
-      "mode": "regular",
       "rescueIndex": 415,
       "status": "skipped",
       "size": 1129,
@@ -437,7 +398,6 @@
       "url": "https://api.mooncat.community/regular-image/415"
     },
     {
-      "mode": "regular",
       "rescueIndex": 418,
       "status": "skipped",
       "size": 990,
@@ -448,7 +408,6 @@
       "url": "https://api.mooncat.community/regular-image/418"
     },
     {
-      "mode": "regular",
       "rescueIndex": 422,
       "status": "skipped",
       "size": 967,
@@ -459,7 +418,6 @@
       "url": "https://api.mooncat.community/regular-image/422"
     },
     {
-      "mode": "regular",
       "rescueIndex": 434,
       "status": "skipped",
       "size": 1321,
@@ -470,7 +428,6 @@
       "url": "https://api.mooncat.community/regular-image/434"
     },
     {
-      "mode": "regular",
       "rescueIndex": 437,
       "status": "skipped",
       "size": 892,
@@ -481,7 +438,6 @@
       "url": "https://api.mooncat.community/regular-image/437"
     },
     {
-      "mode": "regular",
       "rescueIndex": 442,
       "status": "skipped",
       "size": 966,
@@ -492,7 +448,6 @@
       "url": "https://api.mooncat.community/regular-image/442"
     },
     {
-      "mode": "regular",
       "rescueIndex": 444,
       "status": "skipped",
       "size": 1018,
@@ -503,7 +458,6 @@
       "url": "https://api.mooncat.community/regular-image/444"
     },
     {
-      "mode": "regular",
       "rescueIndex": 453,
       "status": "skipped",
       "size": 1022,
@@ -514,7 +468,6 @@
       "url": "https://api.mooncat.community/regular-image/453"
     },
     {
-      "mode": "regular",
       "rescueIndex": 482,
       "status": "skipped",
       "size": 1006,
@@ -525,7 +478,6 @@
       "url": "https://api.mooncat.community/regular-image/482"
     },
     {
-      "mode": "regular",
       "rescueIndex": 491,
       "status": "skipped",
       "size": 1187,
