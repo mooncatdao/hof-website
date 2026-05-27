@@ -7,23 +7,8 @@ const OUTPUT_ROOT = path.join(process.cwd(), 'public', 'assets', 'mooncats')
 const MANIFEST_PATH = path.join(OUTPUT_ROOT, 'manifest.json')
 const FETCH_ATTEMPTS = 4
 const RETRY_DELAY_MS = 750
-
-const MODE_ENDPOINTS = {
-  regular: 'regular-image',
-  cat: 'cat-image',
-  face: 'face-image',
-  accessorized: 'accessorized-image',
-  glow: 'glow-image',
-  event: 'event-image',
-}
-
-const MODE_ALIASES = {
-  accessories: 'accessorized',
-  accessory: 'accessorized',
-  acclimated: 'glow',
-  head: 'face',
-  heads: 'face',
-}
+const IMAGE_MODE = 'regular'
+const IMAGE_ENDPOINT = 'regular-image'
 
 const POSE_BY_SIZE = {
   '240x250': 'stalking',
@@ -33,10 +18,7 @@ const POSE_BY_SIZE = {
 }
 
 function getArgs() {
-  const args = {
-    force: false,
-    modes: new Set(['regular']),
-  }
+  const args = { force: false }
 
   for (const arg of process.argv.slice(2)) {
     if (arg === '--force') {
@@ -44,40 +26,12 @@ function getArgs() {
       continue
     }
 
-    if (arg === '--all') {
-      Object.keys(MODE_ENDPOINTS).forEach((mode) => args.modes.add(mode))
-      continue
-    }
-
-    if (arg.startsWith('--mode=')) {
-      args.modes.clear()
-      const modes = arg
-        .slice('--mode='.length)
-        .split(',')
-        .map((mode) => mode.trim())
-        .filter(Boolean)
-
-      modes.forEach((mode) => args.modes.add(normalizeMode(mode)))
+    if (arg === '--all' || arg.startsWith('--mode=')) {
+      throw new Error('Only regular MoonCat images are supported. Remove old cache flags and rerun npm run cache:images.')
     }
   }
 
-  return {
-    ...args,
-    modes: [...args.modes],
-  }
-}
-
-function normalizeMode(mode) {
-  const normalized = mode.toLowerCase()
-  const aliased = MODE_ALIASES[normalized] || normalized
-
-  if (typeof MODE_ENDPOINTS[aliased] !== 'string') {
-    throw new Error(
-      `Unknown image mode "${mode}". Valid modes: ${Object.keys(MODE_ENDPOINTS).join(', ')}`,
-    )
-  }
-
-  return aliased
+  return args
 }
 
 async function exists(filePath) {
@@ -119,7 +73,7 @@ async function getExistingManifestFiles() {
     const files = Array.isArray(manifest.files) ? manifest.files : []
 
     return new Map(
-      files.map((file) => [`${file.mode}:${file.rescueIndex}`, file]),
+      files.map((file) => [file.rescueIndex, file]),
     )
   } catch (error) {
     if (error.code === 'ENOENT') return new Map()
@@ -163,21 +117,19 @@ async function fetchPng(url) {
   throw lastError
 }
 
-async function cacheImage(mode, rescueIndex, force, existingFiles) {
-  const endpoint = MODE_ENDPOINTS[mode]
-  const modeDir = path.join(OUTPUT_ROOT, mode)
+async function cacheImage(rescueIndex, force, existingFiles) {
+  const modeDir = path.join(OUTPUT_ROOT, IMAGE_MODE)
   const outputPath = path.join(modeDir, `${rescueIndex}.png`)
 
   await mkdir(modeDir, { recursive: true })
 
-  const url = `${API_BASE_URL}/${endpoint}/${rescueIndex}`
+  const url = `${API_BASE_URL}/${IMAGE_ENDPOINT}/${rescueIndex}`
 
   if (!force && (await exists(outputPath))) {
-    const existing = existingFiles.get(`${mode}:${rescueIndex}`) || {}
+    const existing = existingFiles.get(rescueIndex) || {}
 
     return {
       ...existing,
-      mode,
       rescueIndex,
       status: 'skipped',
       url,
@@ -190,7 +142,6 @@ async function cacheImage(mode, rescueIndex, force, existingFiles) {
 
   return {
     ...image,
-    mode,
     rescueIndex,
     status: 'cached',
     url,
@@ -205,39 +156,33 @@ async function main() {
   const existingFiles = await getExistingManifestFiles()
   const results = []
 
-  for (const mode of args.modes) {
-    for (const rescueIndex of rescueIndexes) {
-      let result
+  for (const rescueIndex of rescueIndexes) {
+    let result
 
-      try {
-        result = await cacheImage(mode, rescueIndex, args.force, existingFiles)
-      } catch (error) {
-        result = {
-          mode,
-          rescueIndex,
-          status: 'failed',
-          error: error.message,
-        }
+    try {
+      result = await cacheImage(rescueIndex, args.force, existingFiles)
+    } catch (error) {
+      result = {
+        rescueIndex,
+        status: 'failed',
+        error: error.message,
       }
-
-      results.push(result)
-      console.log(
-        `${result.status} ${mode}/${rescueIndex}.png${result.error ? ` - ${result.error}` : ''}`,
-      )
     }
+
+    results.push(result)
+    console.log(
+      `${result.status} ${IMAGE_MODE}/${rescueIndex}.png${result.error ? ` - ${result.error}` : ''}`,
+    )
   }
 
   await writeFile(
     MANIFEST_PATH,
     `${JSON.stringify(
       {
-        generatedAt: new Date().toISOString(),
         apiBaseUrl: API_BASE_URL,
-        modes: args.modes,
         rescueIndexes,
         files: results.map(
-          ({ mode, rescueIndex, status, size, width, height, etag, error, url }) => ({
-            mode,
+          ({ rescueIndex, status, size, width, height, etag, error, url }) => ({
             rescueIndex,
             status,
             size,

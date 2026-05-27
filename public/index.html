@@ -255,14 +255,8 @@
         return LibMoonCat.generateImage(member.catId || getCatId(member.rescueIndex))
       }
 
-      function getImageMode(member) {
-        return typeof member.imageMode === 'string' && member.imageMode.trim().length > 0
-          ? member.imageMode.trim()
-          : 'regular'
-      }
-
       function getCachedCatImage(member) {
-        return './assets/mooncats/' + getImageMode(member) + '/' + member.rescueIndex + '.png'
+        return './assets/mooncats/regular/' + member.rescueIndex + '.png'
       }
 
       function getPoseByRescueIndex(manifest) {
@@ -271,11 +265,7 @@
         if (!Array.isArray(manifest?.files)) return poseByRescueIndex
 
         manifest.files.forEach((file) => {
-          if (
-            file.mode === 'regular' &&
-            Number.isInteger(file.rescueIndex) &&
-            typeof file.pose === 'string'
-          ) {
+          if (Number.isInteger(file.rescueIndex) && typeof file.pose === 'string') {
             poseByRescueIndex.set(file.rescueIndex, file.pose)
           }
         })
@@ -307,7 +297,7 @@
               rescueIndex,
               sortOrder: index,
               catId: override.catId || generated.catId || getCatId(rescueIndex),
-              pose: override.pose || generated.pose || poseByRescueIndex.get(rescueIndex),
+              pose: poseByRescueIndex.get(rescueIndex),
             }
           })
           .filter((member) => Number.isInteger(member.rescueIndex))

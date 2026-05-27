@@ -11,28 +11,47 @@ If `public/overrides.json` is missing or empty, the site falls back to rendering
 
 ## Cached Images
 
-The site prefers cached MoonCat API PNGs from `public/assets/mooncats/<mode>/<rescueIndex>.png`.
+The site prefers cached MoonCat API PNGs from `public/assets/mooncats/regular/<rescueIndex>.png`.
 If a cached PNG is missing, the browser falls back to locally generated `LibMoonCat` images.
 The cache manifest derives each regular image's pose from its API dimensions, and the site uses that pose to preserve the original Hall of Fame relative MoonCat widths.
 
-Cache the default regular images:
+Cache the regular images:
 
 ```bash
 npm run cache:images
 ```
 
-Cache a specific image mode:
+## Admin
+
+`public/admin.html` is a static editor for `public/overrides.json`. It loads the generated member data and cached image manifest, previews the Hall of Fame, and exports a replacement `overrides.json` file.
+
+After replacing `public/overrides.json` with an exported copy, run `npm run cache:images` to cache images for any newly added rescue indexes and refresh pose metadata.
+On `main`, GitHub Actions also refreshes and commits `public/assets/mooncats` automatically when `public/overrides.json` changes.
+
+Run the admin unit tests:
 
 ```bash
-npm run cache:images -- --mode=face
-npm run cache:images -- --mode=accessorized
+npm test
 ```
 
-Cache every supported mode:
+### GitHub Login
 
-```bash
-npm run cache:images -- --all
+The admin page can show GitHub organization login status when deployed on Cloudflare Pages Functions.
+Local `python3 -m http.server` testing will show GitHub login as unavailable because it only serves static files.
+On Cloudflare, `/admin.html` is served through a Pages Function and redirects unauthenticated visitors to GitHub login.
+
+Create a GitHub OAuth app with this callback URL:
+
+```text
+https://YOUR_DOMAIN/api/auth/callback
 ```
 
-Supported modes are `regular`, `cat`, `face`, `accessorized`, `glow`, and `event`.
-`head` is accepted as an alias for `face`.
+Set these Cloudflare Pages environment variables/secrets:
+
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `GITHUB_ORG`
+- `SESSION_SECRET` at least 32 characters
+- `ADMIN_SESSION_TTL_SECONDS` optional, defaults to 8 hours, maximum 24 hours
+
+The OAuth flow requests GitHub's `read:org` scope so private organization membership can be verified.
