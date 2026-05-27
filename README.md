@@ -1,6 +1,4 @@
-# hof-website
-
-Hall of Fame Website
+# Hall of Fame Website
 
 ## Data
 
