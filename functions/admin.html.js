@@ -5,7 +5,13 @@ import {
 } from './_lib/auth.js'
 
 function redirectToLogin(request) {
-  return Response.redirect(new URL('/api/auth/login', request.url), 302)
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: new URL('/api/auth/login', request.url).toString(),
+      'Set-Cookie': clearSessionCookie(),
+    },
+  })
 }
 
 export async function onRequestGet({ request, env, next }) {
@@ -22,9 +28,7 @@ export async function onRequestGet({ request, env, next }) {
 
   const session = await readSession(request, config)
   if (session === null) {
-    const response = redirectToLogin(request)
-    response.headers.append('Set-Cookie', clearSessionCookie())
-    return response
+    return redirectToLogin(request)
   }
 
   return next()
