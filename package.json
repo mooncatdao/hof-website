@@ -5,12 +5,17 @@
   "description": "MoonCats Hall of Fame static website",
   "scripts": {
     "build": "node scripts/dayoneclub.mjs",
-    "cache:images": "node scripts/cache-mooncat-images.mjs"
+    "cache:images": "node scripts/cache-mooncat-images.mjs",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "viem": "^2.38.5"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "wrangler": "^4.95.0"
   }
 }
