@@ -8,7 +8,7 @@ function redirectToLogin(request) {
   return Response.redirect(new URL('/api/auth/login', request.url), 302)
 }
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ request, env, next }) {
   let config
 
   try {
@@ -27,5 +27,5 @@ export async function onRequestGet({ request, env }) {
     return response
   }
 
-  return env.ASSETS.fetch(request)
+  return next()
 }

@@ -157,7 +157,7 @@ test('Cloudflare admin route requires a signed GitHub session', () => {
 
   assert.match(adminRoute, /readSession/)
   assert.match(adminRoute, /\/api\/auth\/login/)
-  assert.match(adminRoute, /env\.ASSETS\.fetch\(request\)/)
+  assert.match(adminRoute, /next\(\)/)
 })
 
 test('auth cookies are HttpOnly, Secure, and SameSite=Lax', () => {
