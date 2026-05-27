@@ -52,6 +52,11 @@ Set these Cloudflare Pages environment variables/secrets:
 - `GITHUB_CLIENT_SECRET`
 - `GITHUB_ORG`
 - `SESSION_SECRET` at least 32 characters
+- `GITHUB_REPO` in `owner/name` format
+- `GITHUB_CONTENT_TOKEN` with Contents read/write access to the repo
 - `ADMIN_SESSION_TTL_SECONDS` optional, defaults to 8 hours, maximum 24 hours
+- `GITHUB_BRANCH` optional, defaults to `main`
+- `GITHUB_OVERRIDES_PATH` optional, defaults to `public/overrides.json`
 
 The OAuth flow requests GitHub's `read:org` scope so private organization membership can be verified.
+The admin Save button uses `GITHUB_CONTENT_TOKEN` server-side to commit the exported overrides JSON through GitHub's repository contents API.
