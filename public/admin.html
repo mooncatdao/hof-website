@@ -453,6 +453,7 @@
           <button id="logoutButton" type="button" class="hidden">Logout</button>
           <button id="reloadButton" type="button">Reload</button>
           <button id="importButton" type="button">Import JSON</button>
+          <button id="saveButton" type="button">Save</button>
           <button id="exportButton" type="button">Export JSON</button>
           <a href="./" aria-label="Open public Hall of Fame"><button type="button">View Site</button></a>
         </div>
@@ -492,7 +493,9 @@
         generatedByRescueIndex: new Map(),
         poseByRescueIndex: new Map(),
         cachedImages: new Set(),
+        isAuthenticated: false,
         isDirty: false,
+        isSaving: false,
       }
 
       const fields = ['rescueIndex', 'name', 'handle', 'catName']
@@ -603,6 +606,10 @@
         return adminCore.getExportJson(state.members)
       }
 
+      function getExportData() {
+        return adminCore.getExportData(state.members)
+      }
+
       function getValidation() {
         return adminCore.validateMembers(state.members, state.cachedImages)
       }
@@ -625,6 +632,45 @@
         link.remove()
         state.isDirty = false
         setStatus('Exported overrides.json')
+      }
+
+      function saveOverrides() {
+        const validation = getValidation()
+        if (validation.errors.length > 0) {
+          setStatus('Fix validation errors before saving', true)
+          renderValidation(validation)
+          return
+        }
+
+        state.isSaving = true
+        setStatus('Saving overrides.json to GitHub...')
+        renderValidation(validation)
+
+        fetch('./api/admin/save-overrides', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(getExportData()),
+        })
+          .then((response) => response.json().then((data) => ({ response, data })))
+          .then(({ response, data }) => {
+            if (!response.ok || !data.ok) {
+              throw new Error(data.error || 'Could not save overrides.json')
+            }
+
+            state.isDirty = false
+            const shortSha = typeof data.commitSha === 'string'
+              ? data.commitSha.slice(0, 7)
+              : 'commit created'
+            setStatus(`Saved overrides.json to GitHub (${shortSha})`)
+          })
+          .catch((error) => {
+            console.error(error)
+            setStatus(error.message, true)
+          })
+          .finally(() => {
+            state.isSaving = false
+            renderValidation()
+          })
       }
 
       function setDirty() {
@@ -856,6 +902,7 @@
         const errors = document.getElementById('validationErrors')
         const warnings = document.getElementById('validationWarnings')
         const exportButton = document.getElementById('exportButton')
+        const saveButton = document.getElementById('saveButton')
 
         summary.textContent =
           validation.errors.length === 0
@@ -878,6 +925,7 @@
         })
 
         exportButton.disabled = validation.errors.length > 0
+        saveButton.disabled = validation.errors.length > 0 || !state.isAuthenticated || state.isSaving
       }
 
       function render() {
@@ -951,20 +999,26 @@
 
             if (data.authenticated) {
               const user = data.user || {}
+              state.isAuthenticated = true
               setAuthStatus(`Logged in as ${user.login} (${user.githubOrg})`)
               loginButton.classList.add('hidden')
               logoutButton.classList.remove('hidden')
+              renderValidation()
               return
             }
 
+            state.isAuthenticated = false
             setAuthStatus('Not logged in with GitHub')
             loginButton.classList.remove('hidden')
             logoutButton.classList.add('hidden')
+            renderValidation()
           })
           .catch(() => {
+            state.isAuthenticated = false
             setAuthStatus('GitHub login unavailable on this static server')
             document.getElementById('loginButton').classList.add('hidden')
             document.getElementById('logoutButton').classList.add('hidden')
+            renderValidation()
           })
       }
 
@@ -983,6 +1037,7 @@
 
       document.getElementById('addButton').addEventListener('click', addMember)
       document.getElementById('sortButton').addEventListener('click', sortMembers)
+      document.getElementById('saveButton').addEventListener('click', saveOverrides)
       document.getElementById('exportButton').addEventListener('click', downloadOverrides)
       document.getElementById('reloadButton').addEventListener('click', start)
       document.getElementById('loginButton').addEventListener('click', () => {

@@ -109,7 +109,11 @@
   }
 
   function getExportJson(members) {
-    return `${JSON.stringify({ members: getExportMembers(members) }, null, 2)}\n`
+    return `${JSON.stringify(getExportData(members), null, 2)}\n`
+  }
+
+  function getExportData(members) {
+    return { members: getExportMembers(members) }
   }
 
   function getWarningsForMember(member, cachedImages) {
@@ -202,6 +206,7 @@
     getCachedImageKey,
     getCachedImages,
     getCacheStatus,
+    getExportData,
     getExportJson,
     getExportMembers,
     getPoseByRescueIndex,

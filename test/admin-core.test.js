@@ -45,6 +45,15 @@ test('getExportMembers filters incomplete rows out of exported JSON', () => {
   )
 })
 
+test('getExportData returns the exact overrides payload for saving', () => {
+  assert.deepEqual(
+    adminCore.getExportData([
+      { rescueIndex: '2', name: 'Lawrence Forman', pose: 'stalking' },
+    ]),
+    { members: [{ rescueIndex: 2, name: 'Lawrence Forman' }] },
+  )
+})
+
 test('manifest helpers derive poses and ignore failed cache files', () => {
   const manifest = {
     files: [
@@ -158,6 +167,18 @@ test('Cloudflare admin route requires a signed GitHub session', () => {
   assert.match(adminRoute, /readSession/)
   assert.match(adminRoute, /\/api\/auth\/login/)
   assert.match(adminRoute, /next\(\)/)
+})
+
+test('save endpoint gates GitHub writes behind a signed session', () => {
+  const saveEndpoint = fs.readFileSync(
+    path.join(__dirname, '..', 'functions', 'api', 'admin', 'save-overrides.js'),
+    'utf8',
+  )
+
+  assert.match(saveEndpoint, /readSession/)
+  assert.match(saveEndpoint, /getGitHubWriteConfig/)
+  assert.match(saveEndpoint, /updateRepositoryFile/)
+  assert.match(saveEndpoint, /normalizeOverrides/)
 })
 
 test('auth cookies are HttpOnly, Secure, and SameSite=Lax', () => {
