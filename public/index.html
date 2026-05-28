@@ -7,13 +7,34 @@
     <link href="https://fonts.cdnfonts.com/css/setback" rel="stylesheet" />
     <link rel="stylesheet" href="./styles/site.css" />
     <link rel="preload" href="./libmooncat-limited.js" as="script" />
+    <link rel="preload" href="./vendor/starfield.js" as="script" />
     <script src="./libmooncat-limited.js"></script>
+    <script src="./vendor/starfield.js"></script>
   </head>
   <body>
+    <div id="starfieldLayer" class="starfieldLayer" aria-hidden="true"></div>
+    <div id="starfieldOrigin" class="starfield-origin starfieldOrigin" aria-hidden="true"></div>
     <main class="page">
       <header class="masthead">
-        <h1 class="title">Day 1 MoonCat Club</h1>
-        <div class="subtitle">Hall of Fame</div>
+        <div class="titleBlock">
+          <h1 class="title">Day 1 MoonCat Club</h1>
+          <div class="subtitle">Hall of Fame</div>
+        </div>
+        <div class="displayControls">
+          <label class="themePicker">
+            <select id="themeSelect" aria-label="Select Hall of Fame theme">
+              <option value="og">OG</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="obsidian">Obsidian</option>
+              <option value="deepspace">DeepSpace</option>
+              <option value="onlycats">OnlyCats</option>
+            </select>
+          </label>
+          <button id="flyingToggle" class="flyingToggle" type="button" aria-pressed="false">
+            Flying Off
+          </button>
+        </div>
       </header>
       <div id="app" class="loading">Loading members...</div>
     </main>
@@ -77,6 +98,105 @@
         })
 
         return poseByRescueIndex
+      }
+
+      function applyTheme(theme) {
+        const allowedThemes = new Set(['og', 'light', 'dark', 'obsidian', 'deepspace', 'onlycats'])
+        const nextTheme = allowedThemes.has(theme) ? theme : 'og'
+
+        document.body.dataset.theme = nextTheme
+
+        try {
+          localStorage.setItem('hof-theme', nextTheme)
+        } catch (error) {
+          // Theme switching still works when storage is unavailable.
+        }
+      }
+
+      function initThemePicker() {
+        const themeSelect = document.getElementById('themeSelect')
+        let savedTheme = 'og'
+
+        try {
+          savedTheme = localStorage.getItem('hof-theme') || savedTheme
+        } catch (error) {
+          // Keep the default theme when storage is unavailable.
+        }
+
+        applyTheme(savedTheme)
+        themeSelect.value = document.body.dataset.theme
+        themeSelect.addEventListener('change', () => applyTheme(themeSelect.value))
+      }
+
+      let isStarfieldActive = false
+
+      function startStarfield() {
+        if (isStarfieldActive || typeof Starfield === 'undefined') return
+
+        const layer = document.getElementById('starfieldLayer')
+        const origin = document.getElementById('starfieldOrigin')
+
+        Starfield.cleanup()
+        Starfield.setup({
+          auto: true,
+          baseSpeed: 3,
+          canvasColor: 'rgb(0, 0, 0)',
+          container: layer,
+          hueJitter: 360,
+          maxAcceleration: 2,
+          originElement: origin,
+          accelerationRate: 0.05,
+          decelerationRate: 0.05,
+          minSpawnRadius: 80,
+          maxSpawnRadius: 500,
+          starColor: 'rgb(121, 239, 118)',
+          trailLength: 0.8
+        })
+        layer.style.position = 'fixed'
+        layer.style.inset = '0'
+        Starfield.setAccelerate(false)
+        isStarfieldActive = true
+      }
+
+      function stopStarfield() {
+        if (!isStarfieldActive || typeof Starfield === 'undefined') return
+
+        Starfield.setAccelerate(false)
+        Starfield.cleanup()
+        isStarfieldActive = false
+      }
+
+      function applyFlying(isFlying) {
+        const flyingToggle = document.getElementById('flyingToggle')
+        const nextValue = isFlying ? 'on' : 'off'
+
+        document.body.dataset.flying = nextValue
+        flyingToggle.setAttribute('aria-pressed', String(isFlying))
+        flyingToggle.textContent = isFlying ? 'Flying On' : 'Flying Off'
+        if (isFlying) startStarfield()
+        else stopStarfield()
+
+        try {
+          localStorage.setItem('hof-flying', nextValue)
+        } catch (error) {
+          // Flying still toggles when storage is unavailable.
+        }
+      }
+
+      function initFlyingToggle() {
+        const flyingToggle = document.getElementById('flyingToggle')
+        let savedFlying = 'off'
+
+        try {
+          savedFlying = localStorage.getItem('hof-flying') || savedFlying
+        } catch (error) {
+          // Keep flying off when storage is unavailable.
+        }
+
+        applyFlying(savedFlying === 'on')
+        flyingToggle.addEventListener('click', () => {
+          applyFlying(document.body.dataset.flying !== 'on')
+        })
       }
 
       function applyOverrides(members, overrides, imageManifest) {
@@ -213,7 +333,11 @@
         }
       }
 
-      window.addEventListener('DOMContentLoaded', start)
+      window.addEventListener('DOMContentLoaded', () => {
+        initThemePicker()
+        initFlyingToggle()
+        start()
+      })
     </script>
   </body>
 </html>
