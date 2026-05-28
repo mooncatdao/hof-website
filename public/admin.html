@@ -61,7 +61,6 @@
       const state = {
         members: [],
         generatedByRescueIndex: new Map(),
-        poseByRescueIndex: new Map(),
         cachedImages: new Set(),
         isAuthenticated: false,
         isDirty: false,
@@ -145,10 +144,6 @@
         })
       }
 
-      function getPoseByRescueIndex(manifest) {
-        return adminCore.getPoseByRescueIndex(manifest)
-      }
-
       function getCachedImages(manifest) {
         return adminCore.getCachedImages(manifest)
       }
@@ -164,7 +159,6 @@
           ...member,
           rescueIndex,
           catId: member.catId || generated.catId || getCatId(rescueIndex),
-          pose: member.pose || generated.pose || state.poseByRescueIndex.get(rescueIndex),
         }
       }
 
@@ -400,7 +394,6 @@
       function renderMember(member) {
         const card = document.createElement('article')
         card.className = 'member-card'
-        if (typeof member.pose === 'string') card.dataset.pose = member.pose
 
         const top = document.createElement('div')
         top.className = 'member-top'
@@ -544,7 +537,6 @@
             state.generatedByRescueIndex = new Map(
               generatedMembers.map((member) => [member.rescueIndex, member]),
             )
-            state.poseByRescueIndex = getPoseByRescueIndex(manifest)
             state.cachedImages = getCachedImages(manifest)
             state.members = overrides.members.map((member) => ({ ...member }))
             state.isDirty = false

@@ -8,13 +8,13 @@ const MANIFEST_PATH = path.join(OUTPUT_ROOT, 'manifest.json')
 const FETCH_ATTEMPTS = 4
 const RETRY_DELAY_MS = 750
 const IMAGE_MODE = 'regular'
-const IMAGE_ENDPOINT = 'regular-image'
-
-const POSE_BY_SIZE = {
-  '240x250': 'stalking',
-  '240x180': 'sleeping',
-  '250x210': 'standing',
-  '210x260': 'pouncing',
+const IMAGE_ENDPOINT = 'image'
+const IMAGE_OPTIONS = {
+  scale: '2',
+  padding: '0',
+  backgroundColor: 'transparent',
+  acc: '',
+  glow: 'false',
 }
 
 function getArgs() {
@@ -117,22 +117,40 @@ async function fetchPng(url) {
   throw lastError
 }
 
+function getImageUrl(rescueIndex) {
+  const url = new URL(`${API_BASE_URL}/${IMAGE_ENDPOINT}/${rescueIndex}`)
+
+  Object.entries(IMAGE_OPTIONS).forEach(([key, value]) => {
+    url.searchParams.set(key, value)
+  })
+
+  return url.toString()
+}
+
+function hasMatchingCachedImage(existing, url) {
+  if (existing?.url !== url) return false
+
+  return Object.entries(IMAGE_OPTIONS).every(
+    ([key, value]) => existing.imageOptions?.[key] === value,
+  )
+}
+
 async function cacheImage(rescueIndex, force, existingFiles) {
   const modeDir = path.join(OUTPUT_ROOT, IMAGE_MODE)
   const outputPath = path.join(modeDir, `${rescueIndex}.png`)
 
   await mkdir(modeDir, { recursive: true })
 
-  const url = `${API_BASE_URL}/${IMAGE_ENDPOINT}/${rescueIndex}`
+  const url = getImageUrl(rescueIndex)
+  const existing = existingFiles.get(rescueIndex) || {}
 
-  if (!force && (await exists(outputPath))) {
-    const existing = existingFiles.get(rescueIndex) || {}
-
+  if (!force && hasMatchingCachedImage(existing, url) && (await exists(outputPath))) {
     return {
       ...existing,
       rescueIndex,
       status: 'skipped',
       url,
+      imageOptions: IMAGE_OPTIONS,
       outputPath,
     }
   }
@@ -145,6 +163,7 @@ async function cacheImage(rescueIndex, force, existingFiles) {
     rescueIndex,
     status: 'cached',
     url,
+    imageOptions: IMAGE_OPTIONS,
     outputPath,
     size: image.bytes.length,
   }
@@ -165,6 +184,8 @@ async function main() {
       result = {
         rescueIndex,
         status: 'failed',
+        url: getImageUrl(rescueIndex),
+        imageOptions: IMAGE_OPTIONS,
         error: error.message,
       }
     }
@@ -182,15 +203,15 @@ async function main() {
         apiBaseUrl: API_BASE_URL,
         rescueIndexes,
         files: results.map(
-          ({ rescueIndex, status, size, width, height, etag, error, url }) => ({
+          ({ rescueIndex, status, size, width, height, etag, error, url, imageOptions }) => ({
             rescueIndex,
             status,
             size,
             width,
             height,
-            pose: POSE_BY_SIZE[`${width}x${height}`],
             etag,
             url,
+            imageOptions,
             error,
           }),
         ),

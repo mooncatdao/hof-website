@@ -48,23 +48,6 @@
     return 'Image cache missing; export JSON, replace public/overrides.json, then run npm run cache:images'
   }
 
-  function getPoseByRescueIndex(manifest) {
-    const poseByRescueIndex = new Map()
-
-    if (!Array.isArray(manifest?.files)) return poseByRescueIndex
-
-    manifest.files.forEach((file) => {
-      if (
-        Number.isInteger(file.rescueIndex) &&
-        typeof file.pose === 'string'
-      ) {
-        poseByRescueIndex.set(file.rescueIndex, file.pose)
-      }
-    })
-
-    return poseByRescueIndex
-  }
-
   function getCachedImages(manifest) {
     const cachedImages = new Set()
 
@@ -209,7 +192,6 @@
     getExportData,
     getExportJson,
     getExportMembers,
-    getPoseByRescueIndex,
     getWarningsForMember,
     normalizeTwitter,
     parseRescueIndex,
