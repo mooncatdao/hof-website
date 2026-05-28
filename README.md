@@ -11,9 +11,9 @@ If `public/overrides.json` is missing or empty, the site falls back to rendering
 
 The site prefers cached MoonCat API PNGs from `public/assets/mooncats/regular/<rescueIndex>.png`.
 If a cached PNG is missing, the browser falls back to locally generated `LibMoonCat` images.
-The cache manifest derives each regular image's pose from its API dimensions, and the site uses that pose to preserve the original Hall of Fame relative MoonCat widths.
+The cache uses the customizable MoonCat image endpoint with `scale=2`, no padding, transparent background, no accessories, and no glow so every cat can render at a uniform source scale inside the same fixed image height.
 
-Cache the regular images:
+Cache the MoonCat images:
 
 ```bash
 npm run cache:images
@@ -23,7 +23,7 @@ npm run cache:images
 
 `public/admin.html` is a static editor for `public/overrides.json`. It loads the generated member data and cached image manifest, previews the Hall of Fame, and exports a replacement `overrides.json` file.
 
-After replacing `public/overrides.json` with an exported copy, run `npm run cache:images` to cache images for any newly added rescue indexes and refresh pose metadata.
+After replacing `public/overrides.json` with an exported copy, run `npm run cache:images` to cache images for any newly added rescue indexes and refresh image metadata.
 On `main`, GitHub Actions also refreshes and commits `public/assets/mooncats` automatically when `public/overrides.json` changes.
 
 Run the admin unit tests:

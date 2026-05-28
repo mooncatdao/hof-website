@@ -20,20 +20,34 @@
           <h1 class="title">Day 1 MoonCat Club</h1>
           <div class="subtitle">Hall of Fame</div>
         </div>
-        <div class="displayControls">
-          <label class="themePicker">
-            <select id="themeSelect" aria-label="Select Hall of Fame theme">
-              <option value="og">OG</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="obsidian">Obsidian</option>
-              <option value="deepspace">DeepSpace</option>
-              <option value="onlycats">OnlyCats</option>
-            </select>
-          </label>
-          <button id="flyingToggle" class="flyingToggle" type="button" aria-pressed="false">
-            Flying Off
+        <div class="displayControls" id="displayControls">
+          <button
+            id="controlsToggle"
+            class="controlsToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="controlsPanel"
+            aria-label="Show display controls"
+          >
+            <img src="./assets/full-moon.png" alt="" aria-hidden="true" />
           </button>
+          <div id="controlsPanel" class="controlsPanel" hidden>
+            <label class="themePicker">
+              <select id="themeSelect" aria-label="Select Hall of Fame theme">
+                <option value="og">OG</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="obsidian">Obsidian</option>
+                <option value="deepspace">DeepSpace</option>
+                <option value="onlycats">OnlyCats</option>
+                <option value="ac">AC</option>
+                <option value="ac-t">AC-T</option>
+              </select>
+            </label>
+            <button id="warpToggle" class="warpToggle" type="button" aria-pressed="false">
+              Warp Off
+            </button>
+          </div>
         </div>
       </header>
       <div id="app" class="loading">Loading members...</div>
@@ -86,22 +100,8 @@
         return './assets/mooncats/regular/' + member.rescueIndex + '.png'
       }
 
-      function getPoseByRescueIndex(manifest) {
-        const poseByRescueIndex = new Map()
-
-        if (!Array.isArray(manifest?.files)) return poseByRescueIndex
-
-        manifest.files.forEach((file) => {
-          if (Number.isInteger(file.rescueIndex) && typeof file.pose === 'string') {
-            poseByRescueIndex.set(file.rescueIndex, file.pose)
-          }
-        })
-
-        return poseByRescueIndex
-      }
-
       function applyTheme(theme) {
-        const allowedThemes = new Set(['og', 'light', 'dark', 'obsidian', 'deepspace', 'onlycats'])
+        const allowedThemes = new Set(['og', 'light', 'dark', 'obsidian', 'deepspace', 'onlycats', 'ac', 'ac-t'])
         const nextTheme = allowedThemes.has(theme) ? theme : 'og'
 
         document.body.dataset.theme = nextTheme
@@ -166,44 +166,69 @@
         isStarfieldActive = false
       }
 
-      function applyFlying(isFlying) {
-        const flyingToggle = document.getElementById('flyingToggle')
-        const nextValue = isFlying ? 'on' : 'off'
+      function applyWarp(isWarping) {
+        const warpToggle = document.getElementById('warpToggle')
+        const nextValue = isWarping ? 'on' : 'off'
 
-        document.body.dataset.flying = nextValue
-        flyingToggle.setAttribute('aria-pressed', String(isFlying))
-        flyingToggle.textContent = isFlying ? 'Flying On' : 'Flying Off'
-        if (isFlying) startStarfield()
+        document.body.dataset.warp = nextValue
+        warpToggle.setAttribute('aria-pressed', String(isWarping))
+        warpToggle.textContent = isWarping ? 'Warp On' : 'Warp Off'
+        if (isWarping) startStarfield()
         else stopStarfield()
 
         try {
-          localStorage.setItem('hof-flying', nextValue)
+          localStorage.setItem('hof-warp', nextValue)
         } catch (error) {
-          // Flying still toggles when storage is unavailable.
+          // Warp still toggles when storage is unavailable.
         }
       }
 
-      function initFlyingToggle() {
-        const flyingToggle = document.getElementById('flyingToggle')
-        let savedFlying = 'off'
+      function initWarpToggle() {
+        const warpToggle = document.getElementById('warpToggle')
+        let savedWarp = 'off'
 
         try {
-          savedFlying = localStorage.getItem('hof-flying') || savedFlying
+          savedWarp = localStorage.getItem('hof-warp') || localStorage.getItem('hof-flying') || savedWarp
         } catch (error) {
-          // Keep flying off when storage is unavailable.
+          // Keep warp off when storage is unavailable.
         }
 
-        applyFlying(savedFlying === 'on')
-        flyingToggle.addEventListener('click', () => {
-          applyFlying(document.body.dataset.flying !== 'on')
+        applyWarp(savedWarp === 'on')
+        warpToggle.addEventListener('click', () => {
+          applyWarp(document.body.dataset.warp !== 'on')
         })
       }
 
-      function applyOverrides(members, overrides, imageManifest) {
+      function initControlsTray() {
+        const displayControls = document.getElementById('displayControls')
+        const controlsToggle = document.getElementById('controlsToggle')
+        const controlsPanel = document.getElementById('controlsPanel')
+
+        function setControlsOpen(isOpen) {
+          displayControls.dataset.open = String(isOpen)
+          controlsToggle.setAttribute('aria-expanded', String(isOpen))
+          controlsToggle.setAttribute(
+            'aria-label',
+            isOpen ? 'Hide display controls' : 'Show display controls',
+          )
+          controlsPanel.hidden = !isOpen
+        }
+
+        controlsToggle.addEventListener('click', () => {
+          const isOpen = controlsToggle.getAttribute('aria-expanded') === 'true'
+          setControlsOpen(!isOpen)
+        })
+
+        document.addEventListener('click', (event) => {
+          if (displayControls.contains(event.target)) return
+          setControlsOpen(false)
+        })
+      }
+
+      function applyOverrides(members, overrides) {
         const generatedByRescueIndex = new Map(
           members.map((member) => [member.rescueIndex, member]),
         )
-        const poseByRescueIndex = getPoseByRescueIndex(imageManifest)
         const overrideMembers = Array.isArray(overrides?.members)
           ? overrides.members
           : []
@@ -223,7 +248,6 @@
               rescueIndex,
               sortOrder: index,
               catId: override.catId || generated.catId || getCatId(rescueIndex),
-              pose: poseByRescueIndex.get(rescueIndex),
             }
           })
           .filter((member) => Number.isInteger(member.rescueIndex))
@@ -244,7 +268,6 @@
       function renderMember(member) {
         const card = document.createElement('article')
         card.className = 'member-card'
-        if (typeof member.pose === 'string') card.dataset.pose = member.pose
 
         const top = document.createElement('div')
         top.className = 'member-top'
@@ -309,12 +332,11 @@
         const app = document.getElementById('app')
 
         try {
-          const [generatedMembers, overrides, imageManifest] = await Promise.all([
+          const [generatedMembers, overrides] = await Promise.all([
             loadJson('./members.json'),
             loadJson('./overrides.json', false),
-            loadJson('./assets/mooncats/manifest.json', false),
           ])
-          const members = applyOverrides(generatedMembers, overrides, imageManifest)
+          const members = applyOverrides(generatedMembers, overrides)
 
           const grid = document.createElement('section')
           grid.className = 'grid'
@@ -334,8 +356,9 @@
       }
 
       window.addEventListener('DOMContentLoaded', () => {
+        initControlsTray()
         initThemePicker()
-        initFlyingToggle()
+        initWarpToggle()
         start()
       })
     </script>

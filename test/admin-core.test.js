@@ -54,23 +54,19 @@ test('getExportData returns the exact overrides payload for saving', () => {
   )
 })
 
-test('manifest helpers derive poses and ignore failed cache files', () => {
+test('manifest helpers expose cached rescue indexes and ignore failed cache files', () => {
   const manifest = {
     files: [
-      { rescueIndex: 2, pose: 'stalking', status: 'cached' },
-      { rescueIndex: 199, pose: 'stalking', status: 'failed' },
-      { rescueIndex: 'bad', pose: 'sleeping', status: 'cached' },
+      { rescueIndex: 2, status: 'cached' },
+      { rescueIndex: 199, status: 'failed' },
+      { rescueIndex: 'bad', status: 'cached' },
     ],
   }
-
-  const poses = adminCore.getPoseByRescueIndex(manifest)
-  assert.equal(poses.get(2), 'stalking')
-  assert.equal(poses.has(199), true)
-  assert.equal(poses.has('bad'), false)
 
   const cachedImages = adminCore.getCachedImages(manifest)
   assert.equal(cachedImages.has(2), true)
   assert.equal(cachedImages.has(199), false)
+  assert.equal(cachedImages.has('bad'), false)
 })
 
 test('cache status reports missing images for newly added rescue indexes', () => {
@@ -94,7 +90,7 @@ test('validateMembers reports errors that should block export', () => {
       { rescueIndex: '2', name: 'One' },
       { rescueIndex: '2', name: 'Duplicate' },
     ],
-    new Set(['regular:2']),
+    new Set([2]),
   )
 
   assert.equal(validation.exportableCount, 2)

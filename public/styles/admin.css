@@ -286,28 +286,19 @@ select {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
   gap: 8px;
 }
 
 .member-card {
-  --mooncat-width: 87px;
   display: grid;
-  grid-template-rows: 28px 90px 28px;
+  grid-template-rows: 34px 92px minmax(28px, auto);
   background: var(--panel);
   border: 2px solid var(--panel-line);
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
   padding: 4px 6px;
   text-align: center;
-  min-height: 146px;
-}
-
-.member-card[data-pose='standing'] {
-  --mooncat-width: 91px;
-}
-
-.member-card[data-pose='pouncing'] {
-  --mooncat-width: 74px;
+  min-height: 160px;
 }
 
 .member-top {
@@ -334,14 +325,17 @@ select {
 
 .member-imageFrame {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  margin-top: 2px;
+  height: 92px;
+  margin-top: 0;
 }
 
 .member-image {
-  width: var(--mooncat-width);
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: 88px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -408,22 +402,13 @@ select {
   }
 
   .grid {
-    grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
     gap: 7px;
   }
 
   .member-card {
-    --mooncat-width: 80px;
-    grid-template-rows: 34px 90px 28px;
+    grid-template-rows: 34px 92px minmax(28px, auto);
     min-height: 168px;
     padding: 6px 5px 8px;
-  }
-
-  .member-card[data-pose='standing'] {
-    --mooncat-width: 84px;
-  }
-
-  .member-card[data-pose='pouncing'] {
-    --mooncat-width: 68px;
   }
 }
