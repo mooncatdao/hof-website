@@ -327,6 +327,7 @@ select {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  padding-bottom: 4px;
   height: 92px;
   margin-top: 0;
 }
