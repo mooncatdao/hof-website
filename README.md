@@ -1,5 +1,14 @@
 # Hall of Fame Website
 
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 or
+later (`AGPL-3.0-or-later`). See `LICENSE` and `NOTICE.md`.
+
+If you modify and deploy this app for users over a network, the AGPL requires
+you to offer those users the Corresponding Source for the deployed modified
+version.
+
 ## Data
 
 - `public/members.json` is generated from the update script and should stay machine-owned.
