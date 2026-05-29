@@ -14,6 +14,7 @@
   <body>
     <div id="starfieldLayer" class="starfieldLayer" aria-hidden="true"></div>
     <div id="starfieldOrigin" class="starfield-origin starfieldOrigin" aria-hidden="true"></div>
+    <div id="warpHint" class="warpHint" aria-hidden="true" hidden></div>
     <main class="page">
       <header class="masthead">
         <div class="titleBlock">
@@ -129,6 +130,157 @@
       }
 
       let isStarfieldActive = false
+      let warpHintShowTimer = null
+      let warpHintHideTimer = null
+      let warpHintTransitionTimer = null
+      let isWarpHintListening = false
+      const WARP_HINT_SHOWN_KEY = 'warpHintShownCount'
+      const WARP_DISCOVERED_KEY = 'warpAccelerationDiscovered'
+      const WARP_HINT_MAX_SHOWN = 2
+      const WARP_HINT_SHOW_DELAY_MS = 1500
+      const WARP_HINT_HIDE_DELAY_MS = 5200
+
+      function isTouchWarpDevice() {
+        return (
+          navigator.maxTouchPoints > 0 ||
+          window.matchMedia('(hover: none)').matches ||
+          window.matchMedia('(pointer: coarse)').matches
+        )
+      }
+
+      function getWarpHintText() {
+        return isTouchWarpDevice() ? 'press de center' : 'hover de center'
+      }
+
+      function getWarpAccelerationDiscovered() {
+        try {
+          return localStorage.getItem(WARP_DISCOVERED_KEY) === 'true'
+        } catch (error) {
+          return false
+        }
+      }
+
+      function setWarpAccelerationDiscovered() {
+        try {
+          localStorage.setItem(WARP_DISCOVERED_KEY, 'true')
+        } catch (error) {
+          // Discovery still hides the hint when storage is unavailable.
+        }
+      }
+
+      function getWarpHintShownCount() {
+        try {
+          const count = Number(localStorage.getItem(WARP_HINT_SHOWN_KEY) || 0)
+          return Number.isFinite(count) ? count : 0
+        } catch (error) {
+          return 0
+        }
+      }
+
+      function incrementWarpHintShownCount() {
+        try {
+          localStorage.setItem(WARP_HINT_SHOWN_KEY, String(getWarpHintShownCount() + 1))
+        } catch (error) {
+          // The hint remains one-time-ish only while storage is available.
+        }
+      }
+
+      function clearWarpHintTimers() {
+        window.clearTimeout(warpHintShowTimer)
+        window.clearTimeout(warpHintHideTimer)
+        window.clearTimeout(warpHintTransitionTimer)
+        warpHintShowTimer = null
+        warpHintHideTimer = null
+        warpHintTransitionTimer = null
+      }
+
+      function hideWarpHint() {
+        const hint = document.getElementById('warpHint')
+
+        hint.classList.remove('is-visible')
+        window.clearTimeout(warpHintHideTimer)
+        window.clearTimeout(warpHintTransitionTimer)
+        warpHintHideTimer = null
+        warpHintTransitionTimer = window.setTimeout(() => {
+          if (!hint.classList.contains('is-visible')) {
+            hint.hidden = true
+          }
+        }, 250)
+      }
+
+      function showWarpHint() {
+        if (getWarpAccelerationDiscovered() || getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN) {
+          return
+        }
+
+        const hint = document.getElementById('warpHint')
+        hint.textContent = getWarpHintText()
+        hint.hidden = false
+        incrementWarpHintShownCount()
+
+        window.requestAnimationFrame(() => {
+          hint.classList.add('is-visible')
+        })
+
+        window.clearTimeout(warpHintHideTimer)
+        warpHintHideTimer = window.setTimeout(hideWarpHint, WARP_HINT_HIDE_DELAY_MS)
+      }
+
+      function discoverWarpAcceleration() {
+        if (document.body.dataset.warp !== 'on') return
+
+        setWarpAccelerationDiscovered()
+        clearWarpHintTimers()
+        hideWarpHint()
+      }
+
+      function handleWarpTouchPress(event) {
+        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return
+        if (typeof Starfield !== 'undefined') Starfield.setAccelerate(true)
+        discoverWarpAcceleration()
+      }
+
+      function handleWarpTouchRelease(event) {
+        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return
+        if (typeof Starfield !== 'undefined') Starfield.setAccelerate(false)
+      }
+
+      function startWarpHint() {
+        const origin = document.getElementById('starfieldOrigin')
+
+        if (!isWarpHintListening) {
+          origin.addEventListener('mouseenter', discoverWarpAcceleration)
+          origin.addEventListener('pointerdown', handleWarpTouchPress)
+          origin.addEventListener('pointerup', handleWarpTouchRelease)
+          origin.addEventListener('pointercancel', handleWarpTouchRelease)
+          origin.addEventListener('lostpointercapture', handleWarpTouchRelease)
+          isWarpHintListening = true
+        }
+
+        clearWarpHintTimers()
+
+        if (getWarpAccelerationDiscovered() || getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN) {
+          return
+        }
+
+        warpHintShowTimer = window.setTimeout(showWarpHint, WARP_HINT_SHOW_DELAY_MS)
+      }
+
+      function stopWarpHint() {
+        const origin = document.getElementById('starfieldOrigin')
+
+        if (isWarpHintListening) {
+          origin.removeEventListener('mouseenter', discoverWarpAcceleration)
+          origin.removeEventListener('pointerdown', handleWarpTouchPress)
+          origin.removeEventListener('pointerup', handleWarpTouchRelease)
+          origin.removeEventListener('pointercancel', handleWarpTouchRelease)
+          origin.removeEventListener('lostpointercapture', handleWarpTouchRelease)
+          isWarpHintListening = false
+        }
+
+        clearWarpHintTimers()
+        hideWarpHint()
+      }
 
       function startStarfield() {
         if (isStarfieldActive || typeof Starfield === 'undefined') return
@@ -173,8 +325,13 @@
         document.body.dataset.warp = nextValue
         warpToggle.setAttribute('aria-pressed', String(isWarping))
         warpToggle.textContent = isWarping ? 'Warp On' : 'Warp Off'
-        if (isWarping) startStarfield()
-        else stopStarfield()
+        if (isWarping) {
+          startStarfield()
+          startWarpHint()
+        } else {
+          stopWarpHint()
+          stopStarfield()
+        }
 
         try {
           localStorage.setItem('hof-warp', nextValue)

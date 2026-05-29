@@ -201,6 +201,34 @@ body[data-warp='on'] .starfieldOrigin {
   pointer-events: auto;
 }
 
+.warpHint {
+  position: fixed;
+  top: calc(50% + min(18vmin, 150px));
+  left: 50%;
+  z-index: 4;
+  max-width: min(260px, calc(100vw - 32px));
+  padding: 6px 10px;
+  border: 2px solid rgba(121, 239, 118, 0.6);
+  background: rgba(0, 0, 0, 0.68);
+  color: var(--mint);
+  box-shadow: var(--panel-shadow);
+  font-size: clamp(13px, 1.8vw, 18px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 2px 2px 0 var(--mint-shadow);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.98);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.warpHint.is-visible {
+  opacity: 0.88;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .page {
   position: relative;
   z-index: 1;
@@ -501,5 +529,9 @@ body[data-theme='ac-t'] .member-bottom {
   .starfieldLayer,
   .starfieldOrigin {
     display: none !important;
+  }
+
+  .warpHint {
+    transition: none;
   }
 }
