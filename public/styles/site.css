@@ -16,7 +16,7 @@
   --star-faint: 0.7;
 }
 
-body[data-theme='og'] {
+body[data-theme="og"] {
   --bg: #111111;
   --panel: #f0f4df;
   --panel-line: #151515;
@@ -32,7 +32,7 @@ body[data-theme='og'] {
   --star-faint: 0.7;
 }
 
-body[data-theme='light'] {
+body[data-theme="light"] {
   --bg: #f7f7f2;
   --panel: #ffffff;
   --panel-line: #242424;
@@ -48,7 +48,7 @@ body[data-theme='light'] {
   --star-faint: 0;
 }
 
-body[data-theme='dark'] {
+body[data-theme="dark"] {
   --bg: #111111;
   --panel: #111111;
   --panel-line: #79ef76;
@@ -64,7 +64,7 @@ body[data-theme='dark'] {
   --star-faint: 0.52;
 }
 
-body[data-theme='obsidian'] {
+body[data-theme="obsidian"] {
   --bg: #111111;
   --panel: #111111;
   --panel-line: #111111;
@@ -80,7 +80,7 @@ body[data-theme='obsidian'] {
   --star-faint: 0.52;
 }
 
-body[data-theme='deepspace'] {
+body[data-theme="deepspace"] {
   --bg: #111111;
   --panel: transparent;
   --panel-line: transparent;
@@ -96,7 +96,7 @@ body[data-theme='deepspace'] {
   --star-faint: 0.52;
 }
 
-body[data-theme='onlycats'] {
+body[data-theme="onlycats"] {
   --bg: #111111;
   --panel: transparent;
   --panel-line: transparent;
@@ -112,8 +112,8 @@ body[data-theme='onlycats'] {
   --star-faint: 0.52;
 }
 
-body[data-theme='ac'],
-body[data-theme='ac-t'] {
+body[data-theme="ac"],
+body[data-theme="ac-t"] {
   --bg: #111111;
   --panel: transparent;
   --panel-line: transparent;
@@ -127,12 +127,12 @@ body[data-theme='ac-t'] {
   --star-faint: 0.52;
 }
 
-body[data-theme='ac'] {
+body[data-theme="ac"] {
   --text: transparent;
   --muted: transparent;
 }
 
-body[data-theme='ac-t'] {
+body[data-theme="ac-t"] {
   --text: #f0f4df;
   --muted: #b6bea8;
 }
@@ -149,22 +149,57 @@ body {
 
 body {
   position: relative;
-  font-family: 'Trebuchet MS', 'Verdana', sans-serif;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, var(--star-strong)) 0 1px, transparent 2px),
-    radial-gradient(circle at 74% 9%, rgba(255, 255, 255, var(--star-bright)) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 87% 36%, rgba(255, 255, 255, var(--star-soft)) 0 1px, transparent 2px),
-    radial-gradient(circle at 21% 63%, rgba(255, 255, 255, var(--star-medium)) 0 1px, transparent 2px),
-    radial-gradient(circle at 60% 71%, rgba(255, 255, 255, var(--star-bright)) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 94% 81%, rgba(255, 255, 255, var(--star-medium)) 0 1px, transparent 2px),
-    radial-gradient(circle at 43% 91%, rgba(255, 255, 255, var(--star-faint)) 0 1px, transparent 2px),
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(255, 255, 255, var(--star-strong)) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 74% 9%,
+      rgba(255, 255, 255, var(--star-bright)) 0 1.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 87% 36%,
+      rgba(255, 255, 255, var(--star-soft)) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 21% 63%,
+      rgba(255, 255, 255, var(--star-medium)) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 60% 71%,
+      rgba(255, 255, 255, var(--star-bright)) 0 1.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 94% 81%,
+      rgba(255, 255, 255, var(--star-medium)) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 43% 91%,
+      rgba(255, 255, 255, var(--star-faint)) 0 1px,
+      transparent 2px
+    ),
     var(--bg);
-  background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, 290px 290px,
-    350px 350px, 300px 300px, auto;
+  background-size:
+    240px 240px,
+    310px 310px,
+    270px 270px,
+    330px 330px,
+    290px 290px,
+    350px 350px,
+    300px 300px,
+    auto;
 }
 
-body[data-warp='on'] {
+body[data-warp="on"] {
   overflow-x: hidden;
 }
 
@@ -177,7 +212,7 @@ body[data-warp='on'] {
   pointer-events: none;
 }
 
-body[data-warp='on'] .starfieldLayer {
+body[data-warp="on"] .starfieldLayer {
   display: block;
 }
 
@@ -197,7 +232,7 @@ body[data-warp='on'] .starfieldLayer {
   transform: translate(-50%, -50%);
 }
 
-body[data-warp='on'] .starfieldOrigin {
+body[data-warp="on"] .starfieldOrigin {
   pointer-events: auto;
 }
 
@@ -221,7 +256,9 @@ body[data-warp='on'] .starfieldOrigin {
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -50%) scale(0.98);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 
 .warpHint.is-visible {
@@ -253,7 +290,7 @@ body[data-warp='on'] .starfieldOrigin {
 
 .title,
 .subtitle {
-  font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+  font-family: "Setback TT (BRK)", Georgia, "Times New Roman", serif;
   font-weight: 700;
   letter-spacing: 1px;
   color: var(--mint);
@@ -292,7 +329,7 @@ body[data-warp='on'] .starfieldOrigin {
 }
 
 .controlsToggle:hover img,
-.controlsToggle[aria-expanded='true'] img {
+.controlsToggle[aria-expanded="true"] img {
   opacity: 0.85;
 }
 
@@ -342,7 +379,7 @@ body[data-warp='on'] .starfieldOrigin {
   padding: 5px 8px;
 }
 
-.warpToggle[aria-pressed='true'] {
+.warpToggle[aria-pressed="true"] {
   border-color: var(--mint);
   color: var(--mint);
   background: #000000;
@@ -417,19 +454,19 @@ body[data-warp='on'] .starfieldOrigin {
   image-rendering: crisp-edges;
 }
 
-body[data-theme='ac'] .member-top,
-body[data-theme='ac'] .member-bottom {
+body[data-theme="ac"] .member-top,
+body[data-theme="ac"] .member-bottom {
   visibility: hidden;
 }
 
-body[data-theme='ac'] .member-imageFrame,
-body[data-theme='ac-t'] .member-imageFrame {
+body[data-theme="ac"] .member-imageFrame,
+body[data-theme="ac-t"] .member-imageFrame {
   position: relative;
 }
 
-body[data-theme='ac'] .member-imageFrame::after,
-body[data-theme='ac-t'] .member-imageFrame::after {
-  content: '';
+body[data-theme="ac"] .member-imageFrame::after,
+body[data-theme="ac-t"] .member-imageFrame::after {
+  content: "";
   position: absolute;
   left: 50%;
   bottom: 0px;
@@ -441,8 +478,8 @@ body[data-theme='ac-t'] .member-imageFrame::after {
   transform: translateX(-50%);
 }
 
-body[data-theme='ac'] .member-image,
-body[data-theme='ac-t'] .member-image {
+body[data-theme="ac"] .member-image,
+body[data-theme="ac-t"] .member-image {
   position: relative;
   z-index: 1;
 }
@@ -453,8 +490,12 @@ body[data-theme='ac-t'] .member-image {
   margin-top: 0;
 }
 
-body[data-theme='ac-t'] .member-bottom {
+body[data-theme="ac-t"] .member-bottom {
   transform: translateY(4px);
+}
+
+body[data-theme="ac-t"] .grid {
+  gap: 24px 8px;
 }
 
 .member-cat {
