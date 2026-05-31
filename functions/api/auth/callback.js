@@ -11,22 +11,30 @@ import {
   getGitHubUser,
 } from '../../_lib/github.js'
 import { getBaseUrl } from '../../_lib/auth.js'
+import { withSecurityHeaders } from '../../_lib/security.js'
 
 function redirectWithError(message) {
   const url = new URL('/admin.html', 'https://example.com')
   url.searchParams.set('auth_error', message)
 
-  return new Response(null, {
+  return withSecurityHeaders(new Response(null, {
     status: 302,
     headers: {
       Location: `${url.pathname}${url.search}`,
       'Set-Cookie': clearStateCookie(),
     },
-  })
+  }))
 }
 
 export async function onRequestGet({ request, env }) {
-  const config = getRequiredEnv(env)
+  let config
+
+  try {
+    config = getRequiredEnv(env)
+  } catch (error) {
+    return redirectWithError('Admin GitHub login is not configured')
+  }
+
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')
@@ -48,14 +56,14 @@ export async function onRequestGet({ request, env }) {
 
     const session = await createSession(user, config)
 
-    return new Response(null, {
+    return withSecurityHeaders(new Response(null, {
       status: 302,
       headers: [
         ['Location', '/admin.html'],
         ['Set-Cookie', clearStateCookie()],
         ['Set-Cookie', makeSessionCookie(session, config)],
       ],
-    })
+    }))
   } catch (error) {
     return redirectWithError(error.message)
   }

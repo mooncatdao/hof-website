@@ -4,9 +4,20 @@ import {
   makeStateCookie,
   randomState,
 } from '../../_lib/auth.js'
+import {
+  textResponse,
+  withSecurityHeaders,
+} from '../../_lib/security.js'
 
 export async function onRequestGet({ request, env }) {
-  const config = getRequiredEnv(env)
+  let config
+
+  try {
+    config = getRequiredEnv(env)
+  } catch (error) {
+    return textResponse('Admin GitHub login is not configured.', 503)
+  }
+
   const state = randomState()
   const redirectUri = `${getBaseUrl(request)}/api/auth/callback`
   const url = new URL('https://github.com/login/oauth/authorize')
@@ -16,11 +27,11 @@ export async function onRequestGet({ request, env }) {
   url.searchParams.set('scope', 'read:org')
   url.searchParams.set('state', state)
 
-  return new Response(null, {
+  return withSecurityHeaders(new Response(null, {
     status: 302,
     headers: {
       Location: url.toString(),
       'Set-Cookie': makeStateCookie(state),
     },
-  })
+  }))
 }

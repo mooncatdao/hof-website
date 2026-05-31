@@ -166,7 +166,13 @@ export async function readSession(request, envConfig) {
 
   try {
     const session = JSON.parse(base64UrlDecode(payload))
-    if (typeof session.exp !== 'number' || session.exp < Math.floor(Date.now() / 1000)) {
+    if (
+      typeof session.exp !== 'number' ||
+      session.exp < Math.floor(Date.now() / 1000) ||
+      typeof session.login !== 'string' ||
+      session.login.length === 0 ||
+      session.githubOrg !== envConfig.githubOrg
+    ) {
       return null
     }
 

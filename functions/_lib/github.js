@@ -1,6 +1,15 @@
 const GITHUB_API_BASE = 'https://api.github.com'
 const DEFAULT_OVERRIDES_PATH = 'public/overrides.json'
 
+function isSafeRepositoryPath(value) {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    !value.startsWith('/') &&
+    value.split('/').every((part) => part.length > 0 && part !== '.' && part !== '..')
+  )
+}
+
 function base64UrlPath(value) {
   return value
     .split('/')
@@ -44,9 +53,14 @@ export function getGitHubWriteConfig(env) {
     throw new Error('GITHUB_REPO must be in owner/name format')
   }
 
+  const overridesPath = env.GITHUB_OVERRIDES_PATH || DEFAULT_OVERRIDES_PATH
+  if (!isSafeRepositoryPath(overridesPath)) {
+    throw new Error('GITHUB_OVERRIDES_PATH must be a repository-relative file path')
+  }
+
   return {
     branch: env.GITHUB_BRANCH || 'main',
-    overridesPath: env.GITHUB_OVERRIDES_PATH || DEFAULT_OVERRIDES_PATH,
+    overridesPath,
     repo: env.GITHUB_REPO,
     token: env.GITHUB_CONTENT_TOKEN,
   }
@@ -70,7 +84,7 @@ export async function exchangeCodeForToken(code, envConfig, redirectUri) {
   const data = await response.json()
 
   if (!response.ok || typeof data.access_token !== 'string') {
-    throw new Error(data.error_description || data.error || 'Could not exchange GitHub OAuth code')
+    throw new Error('Could not exchange GitHub OAuth code')
   }
 
   return data.access_token
@@ -111,7 +125,7 @@ export async function getRepositoryFile(config) {
 
   const data = await response.json()
   if (!response.ok) {
-    throw new Error(data.message || 'Could not read current overrides.json from GitHub')
+    throw new Error('Could not read current overrides.json from GitHub')
   }
 
   return data
@@ -141,7 +155,7 @@ export async function updateRepositoryFile(config, content, message) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.message || 'Could not save overrides.json to GitHub')
+    throw new Error('Could not save overrides.json to GitHub')
   }
 
   return data
