@@ -154,6 +154,22 @@ test('admin page loads the tested admin core module', () => {
   assert.match(adminHtml, /validateMembers/)
 })
 
+test('admin field updates do not rebuild rows and reset editor scroll position', () => {
+  const adminHtml = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'admin.html'),
+    'utf8',
+  )
+  const updateMember = adminHtml.match(
+    /function updateMember\(index, field, value\) \{[\s\S]*?\n      \}/,
+  )
+
+  assert.notEqual(updateMember, null)
+  assert.doesNotMatch(updateMember[0], /renderRows\(\)/)
+  assert.match(updateMember[0], /renderValidation\(\)/)
+  assert.match(updateMember[0], /renderPreview\(\)/)
+  assert.match(updateMember[0], /updateCount\(\)/)
+})
+
 test('Cloudflare admin route requires a signed GitHub session', () => {
   const adminRoute = fs.readFileSync(
     path.join(__dirname, '..', 'functions', 'admin.html.js'),
