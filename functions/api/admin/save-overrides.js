@@ -6,23 +6,31 @@ import {
   getGitHubWriteConfig,
   updateRepositoryFile,
 } from '../../_lib/github.js'
+import {
+  getContentLength,
+  getUtf8ByteLength,
+  isJsonRequest,
+  isSameOriginRequest,
+  jsonResponse,
+} from '../../_lib/security.js'
 
 const MAX_BODY_BYTES = 120_000
 const MAX_MEMBERS = 500
+const MIN_RESCUE_INDEX = 0
+const MAX_RESCUE_INDEX = 491
 const EDITABLE_FIELDS = ['name', 'handle', 'catName']
-
-function jsonResponse(body, status = 200) {
-  return Response.json(body, {
-    status,
-    headers: { 'Cache-Control': 'no-store' },
-  })
-}
 
 function parseRescueIndex(value) {
   if (value === '' || value === null || typeof value === 'undefined') return null
 
   const rescueIndex = Number(value)
-  return Number.isInteger(rescueIndex) ? rescueIndex : null
+  return (
+    Number.isInteger(rescueIndex) &&
+    rescueIndex >= MIN_RESCUE_INDEX &&
+    rescueIndex <= MAX_RESCUE_INDEX
+  )
+    ? rescueIndex
+    : null
 }
 
 function cleanMember(member) {
@@ -79,6 +87,18 @@ function normalizeOverrides(input) {
 }
 
 export async function onRequestPost({ request, env }) {
+  if (!isSameOriginRequest(request)) {
+    return jsonResponse({ error: 'Cross-origin request rejected' }, 403)
+  }
+
+  if (!isJsonRequest(request)) {
+    return jsonResponse({ error: 'Content-Type must be application/json' }, 415)
+  }
+
+  if ((getContentLength(request) ?? 0) > MAX_BODY_BYTES) {
+    return jsonResponse({ error: 'Request body is too large' }, 413)
+  }
+
   let authConfig
   let writeConfig
 
@@ -95,7 +115,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   const bodyText = await request.text()
-  if (bodyText.length > MAX_BODY_BYTES) {
+  if (getUtf8ByteLength(bodyText) > MAX_BODY_BYTES) {
     return jsonResponse({ error: 'Request body is too large' }, 413)
   }
 
@@ -121,6 +141,7 @@ export async function onRequestPost({ request, env }) {
       path: writeConfig.overridesPath,
     })
   } catch (error) {
-    return jsonResponse({ error: error.message }, 502)
+    console.error('Could not save overrides.json to GitHub', error)
+    return jsonResponse({ error: 'Could not save overrides.json to GitHub' }, 502)
   }
 }

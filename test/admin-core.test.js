@@ -5,12 +5,21 @@ const test = require('node:test')
 
 const adminCore = require('../public/admin-core.js')
 
+function importSourceModule(relativePath) {
+  const source = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+  return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
+}
+
 test('parseRescueIndex accepts only integer rescue indexes', () => {
   assert.equal(adminCore.parseRescueIndex(199), 199)
   assert.equal(adminCore.parseRescueIndex('199'), 199)
+  assert.equal(adminCore.parseRescueIndex(0), 0)
+  assert.equal(adminCore.parseRescueIndex(491), 491)
   assert.equal(adminCore.parseRescueIndex(''), null)
   assert.equal(adminCore.parseRescueIndex(null), null)
   assert.equal(adminCore.parseRescueIndex(undefined), null)
+  assert.equal(adminCore.parseRescueIndex(-1), null)
+  assert.equal(adminCore.parseRescueIndex(492), null)
   assert.equal(adminCore.parseRescueIndex('199.5'), null)
   assert.equal(adminCore.parseRescueIndex('cat-199'), null)
 })
@@ -154,6 +163,16 @@ test('admin page loads the tested admin core module', () => {
   assert.match(adminHtml, /validateMembers/)
 })
 
+test('public page rejects out-of-range override rescue indexes before rendering', () => {
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'index.html'),
+    'utf8',
+  )
+
+  assert.match(indexHtml, /rescueIndex < 0 \|\| rescueIndex > 491/)
+  assert.match(indexHtml, /\.filter\(\(member\) => member !== null\)/)
+})
+
 test('admin field updates do not rebuild rows and reset editor scroll position', () => {
   const adminHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'admin.html'),
@@ -168,6 +187,84 @@ test('admin field updates do not rebuild rows and reset editor scroll position',
   assert.match(updateMember[0], /renderValidation\(\)/)
   assert.match(updateMember[0], /renderPreview\(\)/)
   assert.match(updateMember[0], /updateCount\(\)/)
+})
+
+test('security helpers reject cross-origin requests and measure UTF-8 bytes', async () => {
+  const security = await importSourceModule('functions/_lib/security.js')
+
+  assert.equal(
+    security.isSameOriginRequest(new Request('https://example.com/api', {
+      headers: { Origin: 'https://example.com' },
+    })),
+    true,
+  )
+  assert.equal(
+    security.isSameOriginRequest(new Request('https://example.com/api', {
+      headers: { Origin: 'https://attacker.example' },
+    })),
+    false,
+  )
+  assert.equal(
+    security.isJsonRequest(new Request('https://example.com/api', {
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    })),
+    true,
+  )
+  assert.equal(security.getUtf8ByteLength('\u20ac'), 3)
+})
+
+test('security responses include low-risk hardening headers', async () => {
+  const security = await importSourceModule('functions/_lib/security.js')
+  const response = security.withSecurityHeaders(new Response(null, {
+    headers: [
+      ['Set-Cookie', 'one=1; Path=/'],
+      ['Set-Cookie', 'two=2; Path=/'],
+    ],
+  }))
+
+  assert.equal(response.headers.get('Cache-Control'), 'no-store')
+  assert.equal(
+    response.headers.get('Content-Security-Policy'),
+    "base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
+  )
+  assert.equal(response.headers.get('Permissions-Policy'), 'camera=(), microphone=(), geolocation=()')
+  assert.equal(response.headers.get('Referrer-Policy'), 'strict-origin-when-cross-origin')
+  assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff')
+  assert.equal(response.headers.get('X-Frame-Options'), 'DENY')
+  assert.deepEqual(response.headers.getSetCookie(), ['one=1; Path=/', 'two=2; Path=/'])
+})
+
+test('signed sessions are rejected after the configured GitHub organization changes', async () => {
+  const auth = await importSourceModule('functions/_lib/auth.js')
+  const config = {
+    githubOrg: 'mooncatdao',
+    sessionSecret: 'x'.repeat(32),
+    sessionTtlSeconds: 60,
+  }
+  const session = await auth.createSession({ login: 'zibzub' }, config)
+  const request = new Request('https://example.com/admin.html', {
+    headers: { Cookie: `hof_admin_session=${encodeURIComponent(session)}` },
+  })
+
+  assert.equal((await auth.readSession(request, config)).login, 'zibzub')
+  assert.equal(await auth.readSession(request, { ...config, githubOrg: 'other' }), null)
+})
+
+test('GitHub write config rejects unsafe repository paths', async () => {
+  const github = await importSourceModule('functions/_lib/github.js')
+  const env = {
+    GITHUB_CONTENT_TOKEN: 'test-token',
+    GITHUB_REPO: 'mooncatdao/hof-website',
+  }
+
+  assert.equal(github.getGitHubWriteConfig(env).overridesPath, 'public/overrides.json')
+  assert.throws(
+    () => github.getGitHubWriteConfig({
+      ...env,
+      GITHUB_OVERRIDES_PATH: '../README.md',
+    }),
+    /repository-relative file path/,
+  )
 })
 
 test('Cloudflare admin route requires a signed GitHub session', () => {
@@ -191,6 +288,9 @@ test('save endpoint gates GitHub writes behind a signed session', () => {
   assert.match(saveEndpoint, /getGitHubWriteConfig/)
   assert.match(saveEndpoint, /updateRepositoryFile/)
   assert.match(saveEndpoint, /normalizeOverrides/)
+  assert.match(saveEndpoint, /isSameOriginRequest/)
+  assert.match(saveEndpoint, /isJsonRequest/)
+  assert.match(saveEndpoint, /getUtf8ByteLength/)
 })
 
 test('auth cookies are HttpOnly, Secure, and SameSite=Lax', () => {
@@ -203,4 +303,17 @@ test('auth cookies are HttpOnly, Secure, and SameSite=Lax', () => {
   assert.match(authLib, /Secure/)
   assert.match(authLib, /SameSite=.*Lax/)
   assert.match(authLib, /MIN_SESSION_SECRET_LENGTH = 32/)
+})
+
+test('static Cloudflare responses declare low-risk security headers', () => {
+  const headers = fs.readFileSync(
+    path.join(__dirname, '..', 'public', '_headers'),
+    'utf8',
+  )
+
+  assert.match(headers, /Content-Security-Policy: base-uri 'self'; frame-ancestors 'none'; object-src 'none'/)
+  assert.match(headers, /Permissions-Policy: camera=\(\), microphone=\(\), geolocation=\(\)/)
+  assert.match(headers, /Referrer-Policy: strict-origin-when-cross-origin/)
+  assert.match(headers, /X-Content-Type-Options: nosniff/)
+  assert.match(headers, /X-Frame-Options: DENY/)
 })

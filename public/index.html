@@ -397,6 +397,10 @@
         return overrideMembers
           .map((override, index) => {
             const rescueIndex = Number(override.rescueIndex)
+            if (!Number.isInteger(rescueIndex) || rescueIndex < 0 || rescueIndex > 491) {
+              return null
+            }
+
             const generated = generatedByRescueIndex.get(rescueIndex) || {}
 
             return {
@@ -407,7 +411,7 @@
               catId: override.catId || generated.catId || getCatId(rescueIndex),
             }
           })
-          .filter((member) => Number.isInteger(member.rescueIndex))
+          .filter((member) => member !== null)
           .sort((a, b) => a.sortOrder - b.sortOrder)
       }
 

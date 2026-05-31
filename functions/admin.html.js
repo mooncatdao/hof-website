@@ -3,15 +3,19 @@ import {
   getRequiredEnv,
   readSession,
 } from './_lib/auth.js'
+import {
+  textResponse,
+  withSecurityHeaders,
+} from './_lib/security.js'
 
 function redirectToLogin(request) {
-  return new Response(null, {
+  return withSecurityHeaders(new Response(null, {
     status: 302,
     headers: {
       Location: new URL('/api/auth/login', request.url).toString(),
       'Set-Cookie': clearSessionCookie(),
     },
-  })
+  }))
 }
 
 export async function onRequestGet({ request, env, next }) {
@@ -20,10 +24,7 @@ export async function onRequestGet({ request, env, next }) {
   try {
     config = getRequiredEnv(env)
   } catch (error) {
-    return new Response('Admin GitHub login is not configured.', {
-      status: 503,
-      headers: { 'Cache-Control': 'no-store' },
-    })
+    return textResponse('Admin GitHub login is not configured.', 503)
   }
 
   const session = await readSession(request, config)
@@ -31,5 +32,5 @@ export async function onRequestGet({ request, env, next }) {
     return redirectToLogin(request)
   }
 
-  return next()
+  return withSecurityHeaders(await next())
 }

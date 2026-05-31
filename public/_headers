@@ -1,0 +1,9 @@
+/*
+  Content-Security-Policy: base-uri 'self'; frame-ancestors 'none'; object-src 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+
+/admin.html
+  Cache-Control: no-store

@@ -8,6 +8,8 @@
   root.AdminCore = api
 })(typeof globalThis !== 'undefined' ? globalThis : window, function () {
   const EXPORT_FIELDS = ['name', 'handle', 'catName']
+  const MIN_RESCUE_INDEX = 0
+  const MAX_RESCUE_INDEX = 491
 
   function normalizeTwitter(value) {
     if (typeof value !== 'string' || value.length === 0) return ''
@@ -30,7 +32,13 @@
     if (value === '' || value === null || typeof value === 'undefined') return null
 
     const rescueIndex = Number(value)
-    return Number.isInteger(rescueIndex) ? rescueIndex : null
+    return (
+      Number.isInteger(rescueIndex) &&
+      rescueIndex >= MIN_RESCUE_INDEX &&
+      rescueIndex <= MAX_RESCUE_INDEX
+    )
+      ? rescueIndex
+      : null
   }
 
   function getCachedImageKey(member) {
