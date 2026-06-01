@@ -497,7 +497,7 @@
     },
     {
       "rescueIndex": 301,
-      "status": "cached",
+      "status": "skipped",
       "size": 608,
       "width": "84",
       "height": "68",
