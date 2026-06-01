@@ -362,7 +362,7 @@ body[data-warp="on"] .starfieldOrigin {
 }
 
 .themePicker select,
-.warpToggle {
+.displayToggle {
   width: 100%;
   min-height: 34px;
   border: none;
@@ -376,11 +376,11 @@ body[data-warp="on"] .starfieldOrigin {
   padding: 5px 26px 5px 8px;
 }
 
-.warpToggle {
+.displayToggle {
   padding: 5px 8px;
 }
 
-.warpToggle[aria-pressed="true"] {
+.displayToggle[aria-pressed="true"] {
   border-color: var(--mint);
   color: var(--mint);
   background: #000000;

@@ -10,6 +10,7 @@
     <link rel="preload" href="./vendor/starfield.js" as="script" />
     <script src="./libmooncat-limited.js"></script>
     <script src="./vendor/starfield.js"></script>
+    <script src="./display-options.js"></script>
   </head>
   <body>
     <div id="starfieldLayer" class="starfieldLayer" aria-hidden="true"></div>
@@ -51,11 +52,27 @@
             </label>
             <button
               id="warpToggle"
-              class="warpToggle"
+              class="displayToggle"
               type="button"
               aria-pressed="false"
             >
               Warp Off
+            </button>
+            <button
+              id="glowToggle"
+              class="displayToggle"
+              type="button"
+              aria-pressed="false"
+            >
+              Glow Off
+            </button>
+            <button
+              id="accessoriesToggle"
+              class="displayToggle"
+              type="button"
+              aria-pressed="false"
+            >
+              Acc Off
             </button>
           </div>
         </div>
@@ -156,8 +173,113 @@
         );
       }
 
-      function getCachedCatImage(member) {
-        return "./assets/mooncats/regular/" + member.rescueIndex + ".png";
+      function getImageVariant() {
+        return DisplayOptions.getImageVariant({
+          glow: document.body.dataset.glow === "on",
+          accessories: document.body.dataset.accessories === "on",
+        });
+      }
+
+      function getCachedCatImage(member, variant = "regular") {
+        return DisplayOptions.getCachedCatImage(member.rescueIndex, variant);
+      }
+
+      function setMemberImage(img) {
+        const member = {
+          rescueIndex: Number(img.dataset.rescueIndex),
+          catId: img.dataset.catId,
+        };
+        const variants =
+          DisplayOptions.getCachedImageFallbackVariants(getImageVariant());
+        const cachedImages = variants.map((variant) =>
+          getCachedCatImage(member, variant),
+        );
+        let fallbackIndex = 0;
+
+        img.onerror = () => {
+          fallbackIndex += 1;
+
+          if (fallbackIndex < cachedImages.length) {
+            img.src = cachedImages[fallbackIndex];
+            return;
+          }
+
+          img.onerror = null;
+          img.src = getGeneratedCatImage(member);
+        };
+        img.src = cachedImages[fallbackIndex];
+      }
+
+      function refreshMemberImages() {
+        document.querySelectorAll(".member-image").forEach(setMemberImage);
+      }
+
+      function applyGlow(isGlowing) {
+        const glowToggle = document.getElementById("glowToggle");
+        const nextValue = isGlowing ? "on" : "off";
+
+        document.body.dataset.glow = nextValue;
+        glowToggle.setAttribute("aria-pressed", String(isGlowing));
+        glowToggle.textContent = isGlowing ? "Glow On" : "Glow Off";
+        refreshMemberImages();
+
+        try {
+          localStorage.setItem("hof-glow", nextValue);
+        } catch (error) {
+          // Glow still toggles when storage is unavailable.
+        }
+      }
+
+      function initGlowToggle() {
+        const glowToggle = document.getElementById("glowToggle");
+        let savedGlow = "off";
+
+        try {
+          savedGlow = localStorage.getItem("hof-glow") || savedGlow;
+        } catch (error) {
+          // Keep glow off when storage is unavailable.
+        }
+
+        applyGlow(savedGlow === "on");
+        glowToggle.addEventListener("click", () => {
+          applyGlow(document.body.dataset.glow !== "on");
+        });
+      }
+
+      function applyAccessories(hasAccessories) {
+        const accessoriesToggle = document.getElementById("accessoriesToggle");
+        const nextValue = hasAccessories ? "on" : "off";
+
+        document.body.dataset.accessories = nextValue;
+        accessoriesToggle.setAttribute(
+          "aria-pressed",
+          String(hasAccessories),
+        );
+        accessoriesToggle.textContent = hasAccessories ? "Acc On" : "Acc Off";
+        refreshMemberImages();
+
+        try {
+          localStorage.setItem("hof-accessories", nextValue);
+        } catch (error) {
+          // Accessories still toggle when storage is unavailable.
+        }
+      }
+
+      function initAccessoriesToggle() {
+        const accessoriesToggle = document.getElementById("accessoriesToggle");
+        let savedAccessories = "off";
+
+        try {
+          savedAccessories =
+            localStorage.getItem("hof-accessories") || savedAccessories;
+        } catch (error) {
+          // Keep accessories off when storage is unavailable.
+        }
+
+        applyAccessories(savedAccessories === "on");
+        accessoriesToggle.addEventListener("click", () => {
+          applyAccessories(document.body.dataset.accessories !== "on");
+        });
       }
 
       function applyTheme(theme) {
@@ -547,11 +669,9 @@
         const img = document.createElement("img");
         img.className = "member-image";
         img.alt = "MoonCat #" + member.rescueIndex;
-        img.src = getCachedCatImage(member);
-        img.onerror = () => {
-          img.onerror = null;
-          img.src = getGeneratedCatImage(member);
-        };
+        img.dataset.rescueIndex = String(member.rescueIndex);
+        img.dataset.catId = member.catId || getCatId(member.rescueIndex);
+        setMemberImage(img);
         imageFrame.appendChild(img);
 
         const bottom = document.createElement("div");
@@ -620,6 +740,8 @@
         initControlsTray();
         initThemePicker();
         initWarpToggle();
+        initGlowToggle();
+        initAccessoriesToggle();
         start();
       });
     </script>

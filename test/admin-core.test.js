@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const { pathToFileURL } = require('node:url')
 
 const adminCore = require('../public/admin-core.js')
 
@@ -84,6 +85,7 @@ test('manifest helpers expose cached rescue indexes and ignore failed cache file
     files: [
       { rescueIndex: 2, status: 'cached' },
       { rescueIndex: 199, status: 'failed' },
+      { rescueIndex: 304, variant: 'glow', status: 'cached' },
       { rescueIndex: 'bad', status: 'cached' },
     ],
   }
@@ -91,7 +93,70 @@ test('manifest helpers expose cached rescue indexes and ignore failed cache file
   const cachedImages = adminCore.getCachedImages(manifest)
   assert.equal(cachedImages.has(2), true)
   assert.equal(cachedImages.has(199), false)
+  assert.equal(cachedImages.has(304), false)
   assert.equal(cachedImages.has('bad'), false)
+})
+
+test('display options map toggle states to cached variant paths and useful fallbacks', () => {
+  const displayOptions = require('../public/display-options.js')
+
+  assert.equal(displayOptions.getImageVariant(), 'regular')
+  assert.equal(displayOptions.getImageVariant({ glow: true }), 'glow')
+  assert.equal(displayOptions.getImageVariant({ accessories: true }), 'accessorized')
+  assert.equal(
+    displayOptions.getImageVariant({ glow: true, accessories: true }),
+    'accessorized-glow',
+  )
+  assert.equal(
+    displayOptions.getCachedCatImage(304, 'accessorized-glow'),
+    './assets/mooncats/accessorized-glow/304.png',
+  )
+  assert.deepEqual(
+    displayOptions.getCachedImageFallbackVariants('accessorized-glow'),
+    ['accessorized-glow', 'accessorized', 'glow', 'regular'],
+  )
+})
+
+test('image cache variants generate the expected API options and CLI selections', async () => {
+  const cacheImages = await import(
+    pathToFileURL(path.join(__dirname, '..', 'scripts', 'cache-mooncat-images.mjs'))
+  )
+
+  assert.deepEqual(cacheImages.getArgs([]), {
+    force: false,
+    variants: ['regular'],
+  })
+  assert.deepEqual(cacheImages.getArgs(['--all', '--force']), {
+    force: true,
+    variants: ['regular', 'glow', 'accessorized', 'accessorized-glow'],
+  })
+  assert.deepEqual(cacheImages.getImageOptions('regular'), {
+    scale: '2',
+    padding: '0',
+    backgroundColor: 'transparent',
+    acc: '',
+    glow: 'false',
+  })
+  assert.deepEqual(cacheImages.getImageOptions('accessorized-glow'), {
+    scale: '2',
+    padding: '0',
+    backgroundColor: 'transparent',
+    glow: 'true',
+  })
+  assert.doesNotMatch(cacheImages.getImageUrl(304, 'accessorized'), /[?&]acc=/)
+})
+
+test('public image controls persist settings and refresh member images in place', () => {
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'index.html'),
+    'utf8',
+  )
+
+  assert.match(indexHtml, /localStorage\.setItem\("hof-glow", nextValue\)/)
+  assert.match(indexHtml, /localStorage\.setItem\("hof-accessories", nextValue\)/)
+  assert.match(indexHtml, /document\.querySelectorAll\("\.member-image"\)\.forEach\(setMemberImage\)/)
+  assert.match(indexHtml, /id="glowToggle"[\s\S]*?aria-pressed="false"/)
+  assert.match(indexHtml, /id="accessoriesToggle"[\s\S]*?aria-pressed="false"/)
 })
 
 test('cache status reports missing images for newly added rescue indexes', () => {
