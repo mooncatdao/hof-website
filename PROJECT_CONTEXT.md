@@ -48,6 +48,10 @@ Supported public themes are:
 
 `onlycats` hides text visually. `ac` and `ac-t` are Adoption Center-inspired variants that add CSS-only blue oval platforms under each MoonCat. `ac` hides text while preserving the same vertical spacing as `ac-t`; `ac-t` keeps text visible.
 
+## Card Metadata Positioning
+
+The public renderer and admin preview attach each MoonCat's basic pose as `data-pose` on its card. Top metadata uses `--card-top-text-offset-y`, defaulting to `0px`. Sleeping and standing poses opt into the global `--card-top-text-safe-offset-y` downward offset, currently `12px`, and reserve handle-line whitespace when the handle is blank. Pouncing, stalking and unsupported poses keep the default position.
+
 ## Controls
 
 Theme and warp controls are hidden behind the moon icon at `public/assets/full-moon.png`. The icon opens a small controls tray and closes again when clicked or when the user clicks outside the tray.
@@ -105,4 +109,3 @@ The repo has two deployment-related setups:
 - Cloudflare/Wrangler config: `wrangler.jsonc` serves `public/` assets and enables Pages Functions-style code under `functions/`.
 
 See `cloudflare deployment notes.md` for Cloudflare-specific setup.
-
