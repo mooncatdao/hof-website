@@ -78,6 +78,7 @@
     manifest.files.forEach((file) => {
       if (
         Number.isInteger(file.rescueIndex) &&
+        (!file.variant || file.variant === 'regular') &&
         file.status !== 'failed'
       ) {
         cachedImages.add(file.rescueIndex)
