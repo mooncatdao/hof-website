@@ -15,7 +15,7 @@ The site is mostly static: `public/index.html` renders the public Hall of Fame i
 - Shared admin logic: `public/admin-core.js`
 - Generated member data: `public/members.json`
 - Curated display/order overrides: `public/overrides.json`
-- Cached MoonCat images: `public/assets/mooncats/regular/<rescueIndex>.png`
+- Cached MoonCat images: `public/assets/mooncats/<variant>/<rescueIndex>.png`
 - Cached image metadata: `public/assets/mooncats/manifest.json`
 
 ## Public Page Behavior
@@ -31,7 +31,7 @@ Each card shows:
 - Optional cat name
 - Optional favorite MoonCat if it differs from the rendered rescue index
 
-The theme selector persists to `localStorage` using `hof-theme`. The warp toggle persists to `localStorage` using `hof-warp`, with a fallback read from the old `hof-flying` key.
+The theme selector persists to `localStorage` using `hof-theme`. The warp toggle persists to `localStorage` using `hof-warp`, with a fallback read from the old `hof-flying` key. Glow and accessory image toggles persist using `hof-glow` and `hof-accessories`.
 
 ## Themes
 
@@ -60,21 +60,31 @@ Warp mode uses `public/vendor/starfield.js` and toggles `body[data-warp='on']`.
 
 ## MoonCat Image Cache
 
-MoonCat images are cached from the customizable MoonCat Community API image endpoint:
+MoonCat images are cached from the customizable MoonCat Community API image endpoint. The default regular image request is:
 
 ```text
 https://api.mooncat.community/image/<rescueIndex>?scale=2&padding=0&backgroundColor=transparent&acc=&glow=false
 ```
 
-The cache script intentionally keeps files under `public/assets/mooncats/regular/` for compatibility, even though the upstream endpoint is no longer `/regular-image`.
+The cache script keeps regular files under `public/assets/mooncats/regular/` for compatibility, even though the upstream endpoint is no longer `/regular-image`. It also supports these optional display variants:
+
+- `regular`: no accessories, no glow
+- `glow`: no accessories, glow
+- `accessorized`: currently worn accessories, no glow
+- `accessorized-glow`: currently worn accessories, glow
+
+Accessorized requests intentionally omit the API's `acc` query parameter. Regular requests pass `acc=` to suppress accessories.
 
 Important cache behavior:
 
 - Script: `scripts/cache-mooncat-images.mjs`
-- Command: `npm run cache:images`
+- Default command: `npm run cache:images`
+- Single variant command: `npm run cache:images -- --variant=<variant>`
+- All variants command: `npm run cache:images -- --all`
+- Force refresh flag: `--force`
 - Source of rescue indexes: `public/overrides.json`
 - Manifest path: `public/assets/mooncats/manifest.json`
-- Manifest stores URL, image options, dimensions, etag, size, and status
+- Manifest stores variant, URL, image options, dimensions, etag, size, and status
 - Cache skipping compares the manifest URL/options against the desired endpoint/options
 
 ## Data Build

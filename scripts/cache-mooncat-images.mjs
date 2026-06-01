@@ -1,5 +1,6 @@
 import { mkdir, readFile, stat, writeFile } from 'fs/promises'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 const API_BASE_URL = 'https://api.mooncat.community'
 const OVERRIDES_PATH = path.join(process.cwd(), 'public', 'overrides.json')
@@ -7,28 +8,68 @@ const OUTPUT_ROOT = path.join(process.cwd(), 'public', 'assets', 'mooncats')
 const MANIFEST_PATH = path.join(OUTPUT_ROOT, 'manifest.json')
 const FETCH_ATTEMPTS = 4
 const RETRY_DELAY_MS = 750
-const IMAGE_MODE = 'regular'
+const DEFAULT_VARIANT = 'regular'
 const IMAGE_ENDPOINT = 'image'
-const IMAGE_OPTIONS = {
+const IMAGE_VARIANTS = {
+  regular: {
+    acc: '',
+    glow: 'false',
+  },
+  glow: {
+    acc: '',
+    glow: 'true',
+  },
+  accessorized: {
+    glow: 'false',
+  },
+  'accessorized-glow': {
+    glow: 'true',
+  },
+}
+const BASE_IMAGE_OPTIONS = {
   scale: '2',
   padding: '0',
   backgroundColor: 'transparent',
-  acc: '',
-  glow: 'false',
 }
 
-function getArgs() {
-  const args = { force: false }
+function getArgs(argv = process.argv.slice(2)) {
+  const args = { force: false, variants: [DEFAULT_VARIANT] }
+  let selectedVariant = null
+  let cacheAll = false
 
-  for (const arg of process.argv.slice(2)) {
+  for (const arg of argv) {
     if (arg === '--force') {
       args.force = true
       continue
     }
 
-    if (arg === '--all' || arg.startsWith('--mode=')) {
-      throw new Error('Only regular MoonCat images are supported. Remove old cache flags and rerun npm run cache:images.')
+    if (arg === '--all') {
+      cacheAll = true
+      continue
     }
+
+    if (arg.startsWith('--variant=')) {
+      selectedVariant = arg.slice('--variant='.length)
+      continue
+    }
+
+    throw new Error(`Unknown cache argument: ${arg}`)
+  }
+
+  if (cacheAll && selectedVariant !== null) {
+    throw new Error('Use either --all or --variant=<name>, not both.')
+  }
+
+  if (selectedVariant !== null) {
+    if (!Object.hasOwn(IMAGE_VARIANTS, selectedVariant)) {
+      throw new Error(
+        `Unknown image variant: ${selectedVariant}. Expected one of: ${Object.keys(IMAGE_VARIANTS).join(', ')}`,
+      )
+    }
+
+    args.variants = [selectedVariant]
+  } else if (cacheAll) {
+    args.variants = Object.keys(IMAGE_VARIANTS)
   }
 
   return args
@@ -67,13 +108,24 @@ async function getCuratedRescueIndexes() {
   ].sort((a, b) => a - b)
 }
 
+function getManifestFileKey({ rescueIndex, variant = DEFAULT_VARIANT }) {
+  return `${variant}:${rescueIndex}`
+}
+
 async function getExistingManifestFiles() {
   try {
     const manifest = JSON.parse(await readFile(MANIFEST_PATH, 'utf8'))
     const files = Array.isArray(manifest.files) ? manifest.files : []
 
     return new Map(
-      files.map((file) => [file.rescueIndex, file]),
+      files.map((file) => {
+        const normalizedFile = {
+          ...file,
+          variant: file.variant || DEFAULT_VARIANT,
+        }
+
+        return [getManifestFileKey(normalizedFile), normalizedFile]
+      }),
     )
   } catch (error) {
     if (error.code === 'ENOENT') return new Map()
@@ -117,40 +169,58 @@ async function fetchPng(url) {
   throw lastError
 }
 
-function getImageUrl(rescueIndex) {
-  const url = new URL(`${API_BASE_URL}/${IMAGE_ENDPOINT}/${rescueIndex}`)
+function getImageOptions(variant) {
+  if (!Object.hasOwn(IMAGE_VARIANTS, variant)) {
+    throw new Error(`Unknown image variant: ${variant}`)
+  }
 
-  Object.entries(IMAGE_OPTIONS).forEach(([key, value]) => {
+  return {
+    ...BASE_IMAGE_OPTIONS,
+    ...IMAGE_VARIANTS[variant],
+  }
+}
+
+function getImageUrl(rescueIndex, variant = DEFAULT_VARIANT) {
+  const url = new URL(`${API_BASE_URL}/${IMAGE_ENDPOINT}/${rescueIndex}`)
+  const imageOptions = getImageOptions(variant)
+
+  Object.entries(imageOptions).forEach(([key, value]) => {
     url.searchParams.set(key, value)
   })
 
   return url.toString()
 }
 
-function hasMatchingCachedImage(existing, url) {
-  if (existing?.url !== url) return false
+function hasMatchingCachedImage(existing, url, variant, imageOptions) {
+  if (existing?.url !== url || existing.variant !== variant) return false
 
-  return Object.entries(IMAGE_OPTIONS).every(
+  return Object.entries(imageOptions).every(
     ([key, value]) => existing.imageOptions?.[key] === value,
   )
 }
 
-async function cacheImage(rescueIndex, force, existingFiles) {
-  const modeDir = path.join(OUTPUT_ROOT, IMAGE_MODE)
-  const outputPath = path.join(modeDir, `${rescueIndex}.png`)
+async function cacheImage(rescueIndex, variant, force, existingFiles) {
+  const variantDir = path.join(OUTPUT_ROOT, variant)
+  const outputPath = path.join(variantDir, `${rescueIndex}.png`)
 
-  await mkdir(modeDir, { recursive: true })
+  await mkdir(variantDir, { recursive: true })
 
-  const url = getImageUrl(rescueIndex)
-  const existing = existingFiles.get(rescueIndex) || {}
+  const url = getImageUrl(rescueIndex, variant)
+  const imageOptions = getImageOptions(variant)
+  const existing = existingFiles.get(getManifestFileKey({ rescueIndex, variant })) || {}
 
-  if (!force && hasMatchingCachedImage(existing, url) && (await exists(outputPath))) {
+  if (
+    !force &&
+    hasMatchingCachedImage(existing, url, variant, imageOptions) &&
+    (await exists(outputPath))
+  ) {
     return {
       ...existing,
       rescueIndex,
+      variant,
       status: 'skipped',
       url,
-      imageOptions: IMAGE_OPTIONS,
+      imageOptions,
       outputPath,
     }
   }
@@ -161,11 +231,38 @@ async function cacheImage(rescueIndex, force, existingFiles) {
   return {
     ...image,
     rescueIndex,
+    variant,
     status: 'cached',
     url,
-    imageOptions: IMAGE_OPTIONS,
+    imageOptions,
     outputPath,
     size: image.bytes.length,
+  }
+}
+
+function getManifestFile({
+  rescueIndex,
+  variant,
+  status,
+  size,
+  width,
+  height,
+  etag,
+  error,
+  url,
+  imageOptions,
+}) {
+  return {
+    rescueIndex,
+    variant,
+    status,
+    size,
+    width,
+    height,
+    etag,
+    url,
+    imageOptions,
+    error,
   }
 }
 
@@ -173,28 +270,42 @@ async function main() {
   const args = getArgs()
   const rescueIndexes = await getCuratedRescueIndexes()
   const existingFiles = await getExistingManifestFiles()
+  const manifestFiles = new Map(existingFiles)
   const results = []
 
-  for (const rescueIndex of rescueIndexes) {
-    let result
+  for (const variant of args.variants) {
+    console.log(`Caching MoonCat image variant: ${variant}`)
 
-    try {
-      result = await cacheImage(rescueIndex, args.force, existingFiles)
-    } catch (error) {
-      result = {
-        rescueIndex,
-        status: 'failed',
-        url: getImageUrl(rescueIndex),
-        imageOptions: IMAGE_OPTIONS,
-        error: error.message,
+    for (const rescueIndex of rescueIndexes) {
+      let result
+
+      try {
+        result = await cacheImage(rescueIndex, variant, args.force, existingFiles)
+      } catch (error) {
+        result = {
+          rescueIndex,
+          variant,
+          status: 'failed',
+          url: getImageUrl(rescueIndex, variant),
+          imageOptions: getImageOptions(variant),
+          error: error.message,
+        }
       }
-    }
 
-    results.push(result)
-    console.log(
-      `${result.status} ${IMAGE_MODE}/${rescueIndex}.png${result.error ? ` - ${result.error}` : ''}`,
-    )
+      results.push(result)
+      manifestFiles.set(getManifestFileKey(result), getManifestFile(result))
+      console.log(
+        `${result.status} ${variant}/${rescueIndex}.png${result.error ? ` - ${result.error}` : ''}`,
+      )
+    }
   }
+
+  const files = [...manifestFiles.values()].sort(
+    (left, right) =>
+      Object.keys(IMAGE_VARIANTS).indexOf(left.variant) -
+        Object.keys(IMAGE_VARIANTS).indexOf(right.variant) ||
+      left.rescueIndex - right.rescueIndex,
+  )
 
   await writeFile(
     MANIFEST_PATH,
@@ -202,19 +313,7 @@ async function main() {
       {
         apiBaseUrl: API_BASE_URL,
         rescueIndexes,
-        files: results.map(
-          ({ rescueIndex, status, size, width, height, etag, error, url, imageOptions }) => ({
-            rescueIndex,
-            status,
-            size,
-            width,
-            height,
-            etag,
-            url,
-            imageOptions,
-            error,
-          }),
-        ),
+        files,
       },
       null,
       2,
@@ -232,7 +331,22 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error)
-  process.exit(1)
-})
+const isMain =
+  typeof process.argv[1] === 'string' &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isMain) {
+  main().catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })
+}
+
+export {
+  DEFAULT_VARIANT,
+  IMAGE_VARIANTS,
+  getArgs,
+  getImageOptions,
+  getImageUrl,
+  getManifestFileKey,
+}
