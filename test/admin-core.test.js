@@ -179,6 +179,27 @@ test('member card renderers create secure new-tab handle links', () => {
   })
 })
 
+test('member card renderers expose MoonCat poses for CSS positioning', () => {
+  ;['public/index.html', 'public/admin.html'].forEach((relativePath) => {
+    const html = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+
+    assert.match(html, /LibMoonCat\.getTraits\(\s*['"]basic['"]/)
+    assert.match(html, /card\.dataset\.pose = getPose\(member\)/)
+  })
+
+  ;['public/styles/site.css', 'public/styles/admin.css'].forEach((relativePath) => {
+    const css = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+
+    assert.match(css, /\.member-card\[data-pose=['"]sleeping['"]\]/)
+    assert.match(css, /\.member-card\[data-pose=['"]standing['"]\]/)
+    assert.match(css, /--card-top-text-safe-offset-y:\s*12px/)
+    assert.match(css, /--card-top-text-offset-y:\s*var\(--card-top-text-safe-offset-y\)/)
+    assert.match(css, /\.member-card\[data-pose=['"]sleeping['"]\] \.member-handle,/)
+    assert.match(css, /\.member-card\[data-pose=['"]standing['"]\] \.member-handle\s*\{/)
+    assert.match(css, /min-height:\s*1\.05em/)
+  })
+})
+
 test('admin page loads the tested admin core module', () => {
   const adminHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'admin.html'),
