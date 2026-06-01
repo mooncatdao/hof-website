@@ -1,4 +1,6 @@
-# MoonCats Hall of Fame Website
+![MoonCats Hall of Fame website main page](/index.png)
+
+# MoonCats Hall of Fame
 
 A community-maintained Hall of Fame website for the MoonCats DAO.
 
@@ -219,6 +221,8 @@ glow=false
 Only regular MoonCat images are currently supported by the cache script.
 
 If cached images are missing, the browser can fall back to locally generated `LibMoonCat` images.
+
+![Admin Editor](/admin.png)
 
 ## Admin Editor
 
