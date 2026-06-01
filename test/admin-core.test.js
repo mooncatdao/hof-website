@@ -43,6 +43,22 @@ test('cleanMember trims editable fields and preserves intentionally blank handle
   )
 })
 
+test('Twitter handle helpers create parenthesized X links for normalized handles', () => {
+  assert.equal(adminCore.getTwitterHandleDisplay('example'), '(@example)')
+  assert.equal(adminCore.getTwitterHandleUrl('example'), 'https://x.com/example')
+  assert.equal(adminCore.getTwitterHandleDisplay('@example'), '(@example)')
+  assert.equal(adminCore.getTwitterHandleUrl('@example'), 'https://x.com/example')
+})
+
+test('Twitter handle helpers leave empty and non-Twitter values unlinked', () => {
+  assert.equal(adminCore.getTwitterHandleUrl(''), null)
+  assert.equal(adminCore.getTwitterHandleUrl(null), null)
+  assert.equal(adminCore.getTwitterHandleUrl(undefined), null)
+  assert.equal(adminCore.getTwitterHandleUrl('name.eth'), null)
+  assert.equal(adminCore.getTwitterHandleUrl('https://example.com'), null)
+  assert.equal(adminCore.getTwitterHandleDisplay('name.eth'), null)
+})
+
 test('getExportMembers filters incomplete rows out of exported JSON', () => {
   assert.deepEqual(
     adminCore.getExportMembers([
@@ -152,6 +168,17 @@ test('admin page avoids direct HTML injection sinks', () => {
   assert.doesNotMatch(adminHtml, /javascript:/i)
 })
 
+test('member card renderers create secure new-tab handle links', () => {
+  ;['public/index.html', 'public/admin.html'].forEach((relativePath) => {
+    const html = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+
+    assert.match(html, /const handle = createHandleElement\(member\)/)
+    assert.match(html, /link\.target = ['"]_blank['"]/)
+    assert.match(html, /link\.rel = ['"]noopener noreferrer['"]/)
+    assert.match(html, /link\.textContent = getTwitterHandleDisplay\(value\)/)
+  })
+})
+
 test('admin page loads the tested admin core module', () => {
   const adminHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'admin.html'),
@@ -169,7 +196,7 @@ test('public page rejects out-of-range override rescue indexes before rendering'
     'utf8',
   )
 
-  assert.match(indexHtml, /rescueIndex < 0 \|\| rescueIndex > 491/)
+  assert.match(indexHtml, /rescueIndex < 0\s*\|\|\s*rescueIndex > 491/)
   assert.match(indexHtml, /\.filter\(\(member\) => member !== null\)/)
 })
 
