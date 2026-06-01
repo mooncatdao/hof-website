@@ -86,6 +86,14 @@
         return adminCore.normalizeTwitter(value)
       }
 
+      function getTwitterHandleDisplay(value) {
+        return adminCore.getTwitterHandleDisplay(value)
+      }
+
+      function getTwitterHandleUrl(value) {
+        return adminCore.getTwitterHandleUrl(value)
+      }
+
       function stripEth(value) {
         return adminCore.stripEth(value)
       }
@@ -115,6 +123,27 @@
         const twitter = normalizeTwitter(member.twitter)
         if (twitter.length > 0) return twitter
         return typeof member.ensName === 'string' ? '(' + member.ensName + ')' : ''
+      }
+
+      function createHandleElement(member) {
+        const handle = document.createElement('div')
+        handle.className = 'member-handle'
+
+        const value = getHandle(member)
+        const url = getTwitterHandleUrl(value)
+        if (url === null) {
+          handle.textContent = value
+          return handle
+        }
+
+        const link = document.createElement('a')
+        link.href = url
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        link.textContent = getTwitterHandleDisplay(value)
+        handle.appendChild(link)
+
+        return handle
       }
 
       function getCachedCatImage(member) {
@@ -401,9 +430,7 @@
         name.className = 'member-name'
         name.textContent = getDisplayName(member)
 
-        const handle = document.createElement('div')
-        handle.className = 'member-handle'
-        handle.textContent = getHandle(member)
+        const handle = createHandleElement(member)
 
         top.appendChild(name)
         top.appendChild(handle)

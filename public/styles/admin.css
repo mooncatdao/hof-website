@@ -323,6 +323,11 @@ select {
   word-break: break-word;
 }
 
+.member-handle a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .member-imageFrame {
   display: flex;
   align-items: flex-end;

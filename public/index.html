@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -13,7 +13,11 @@
   </head>
   <body>
     <div id="starfieldLayer" class="starfieldLayer" aria-hidden="true"></div>
-    <div id="starfieldOrigin" class="starfield-origin starfieldOrigin" aria-hidden="true"></div>
+    <div
+      id="starfieldOrigin"
+      class="starfield-origin starfieldOrigin"
+      aria-hidden="true"
+    ></div>
     <div id="warpHint" class="warpHint" aria-hidden="true" hidden></div>
     <main class="page">
       <header class="masthead">
@@ -45,7 +49,12 @@
                 <option value="ac-t">AC-T</option>
               </select>
             </label>
-            <button id="warpToggle" class="warpToggle" type="button" aria-pressed="false">
+            <button
+              id="warpToggle"
+              class="warpToggle"
+              type="button"
+              aria-pressed="false"
+            >
               Warp Off
             </button>
           </div>
@@ -60,109 +69,162 @@
           .split(/[\s_-]+/)
           .filter(Boolean)
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ')
+          .join(" ");
       }
 
       function stripEth(value) {
-        return typeof value === 'string' ? value.replace(/\.eth$/i, '') : ''
+        return typeof value === "string" ? value.replace(/\.eth$/i, "") : "";
       }
 
       function normalizeTwitter(value) {
-        if (typeof value !== 'string' || value.length === 0) return null
-        return value.startsWith('@') ? value : '@' + value
+        if (typeof value !== "string" || value.length === 0) return null;
+        return value.startsWith("@") ? value : "@" + value;
+      }
+
+      function isTwitterHandle(value) {
+        return (
+          typeof value === "string" &&
+          /^@?[A-Za-z0-9_]{1,15}$/.test(value.trim())
+        );
+      }
+
+      function getTwitterHandleUrl(value) {
+        if (!isTwitterHandle(value)) return null;
+        return "https://x.com/" + normalizeTwitter(value.trim()).slice(1);
+      }
+
+      function getTwitterHandleDisplay(value) {
+        if (!isTwitterHandle(value)) return null;
+        return "(" + normalizeTwitter(value.trim()) + ")";
       }
 
       function getCatId(rescueIndex) {
-        return LibMoonCat.getCatId(rescueIndex)
+        return LibMoonCat.getCatId(rescueIndex);
       }
 
       function getDisplayName(member) {
-        if (typeof member.name === 'string' && member.name.trim().length > 0) {
-          return member.name.trim()
+        if (typeof member.name === "string" && member.name.trim().length > 0) {
+          return member.name.trim();
         }
 
-        const root = stripEth(member.ensName)
-        return titleCase(root)
+        const root = stripEth(member.ensName);
+        return titleCase(root);
       }
 
       function getHandle(member) {
-        if (typeof member.handle === 'string') return member.handle.trim()
+        if (typeof member.handle === "string") return member.handle.trim();
 
-        const twitter = normalizeTwitter(member.twitter)
-        if (twitter !== null) return twitter
-        return typeof member.ensName === 'string' ? '(' + member.ensName + ')' : ''
+        const twitter = normalizeTwitter(member.twitter);
+        if (twitter !== null) return twitter;
+        return typeof member.ensName === "string"
+          ? "(" + member.ensName + ")"
+          : "";
+      }
+
+      function createHandleElement(member) {
+        const handle = document.createElement("div");
+        handle.className = "member-handle";
+
+        const value = getHandle(member);
+        const url = getTwitterHandleUrl(value);
+        if (url === null) {
+          handle.textContent = value;
+          return handle;
+        }
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = getTwitterHandleDisplay(value);
+        handle.appendChild(link);
+
+        return handle;
       }
 
       function getGeneratedCatImage(member) {
-        return LibMoonCat.generateImage(member.catId || getCatId(member.rescueIndex))
+        return LibMoonCat.generateImage(
+          member.catId || getCatId(member.rescueIndex),
+        );
       }
 
       function getCachedCatImage(member) {
-        return './assets/mooncats/regular/' + member.rescueIndex + '.png'
+        return "./assets/mooncats/regular/" + member.rescueIndex + ".png";
       }
 
       function applyTheme(theme) {
-        const allowedThemes = new Set(['og', 'light', 'dark', 'obsidian', 'deepspace', 'onlycats', 'ac', 'ac-t'])
-        const nextTheme = allowedThemes.has(theme) ? theme : 'og'
+        const allowedThemes = new Set([
+          "og",
+          "light",
+          "dark",
+          "obsidian",
+          "deepspace",
+          "onlycats",
+          "ac",
+          "ac-t",
+        ]);
+        const nextTheme = allowedThemes.has(theme) ? theme : "og";
 
-        document.body.dataset.theme = nextTheme
+        document.body.dataset.theme = nextTheme;
 
         try {
-          localStorage.setItem('hof-theme', nextTheme)
+          localStorage.setItem("hof-theme", nextTheme);
         } catch (error) {
           // Theme switching still works when storage is unavailable.
         }
       }
 
       function initThemePicker() {
-        const themeSelect = document.getElementById('themeSelect')
-        let savedTheme = 'og'
+        const themeSelect = document.getElementById("themeSelect");
+        let savedTheme = "og";
 
         try {
-          savedTheme = localStorage.getItem('hof-theme') || savedTheme
+          savedTheme = localStorage.getItem("hof-theme") || savedTheme;
         } catch (error) {
           // Keep the default theme when storage is unavailable.
         }
 
-        applyTheme(savedTheme)
-        themeSelect.value = document.body.dataset.theme
-        themeSelect.addEventListener('change', () => applyTheme(themeSelect.value))
+        applyTheme(savedTheme);
+        themeSelect.value = document.body.dataset.theme;
+        themeSelect.addEventListener("change", () =>
+          applyTheme(themeSelect.value),
+        );
       }
 
-      let isStarfieldActive = false
-      let warpHintShowTimer = null
-      let warpHintHideTimer = null
-      let warpHintTransitionTimer = null
-      let isWarpHintListening = false
-      const WARP_HINT_SHOWN_KEY = 'warpHintShownCount'
-      const WARP_DISCOVERED_KEY = 'warpAccelerationDiscovered'
-      const WARP_HINT_MAX_SHOWN = 2
-      const WARP_HINT_SHOW_DELAY_MS = 1500
-      const WARP_HINT_HIDE_DELAY_MS = 5200
+      let isStarfieldActive = false;
+      let warpHintShowTimer = null;
+      let warpHintHideTimer = null;
+      let warpHintTransitionTimer = null;
+      let isWarpHintListening = false;
+      const WARP_HINT_SHOWN_KEY = "warpHintShownCount";
+      const WARP_DISCOVERED_KEY = "warpAccelerationDiscovered";
+      const WARP_HINT_MAX_SHOWN = 2;
+      const WARP_HINT_SHOW_DELAY_MS = 1500;
+      const WARP_HINT_HIDE_DELAY_MS = 5200;
 
       function isTouchWarpDevice() {
         return (
           navigator.maxTouchPoints > 0 ||
-          window.matchMedia('(hover: none)').matches ||
-          window.matchMedia('(pointer: coarse)').matches
-        )
+          window.matchMedia("(hover: none)").matches ||
+          window.matchMedia("(pointer: coarse)").matches
+        );
       }
 
       function getWarpHintText() {
-        return isTouchWarpDevice() ? 'press de center' : 'hover de center'
+        return isTouchWarpDevice() ? "press de center" : "hover de center";
       }
 
       function getWarpAccelerationDiscovered() {
         try {
-          return localStorage.getItem(WARP_DISCOVERED_KEY) === 'true'
+          return localStorage.getItem(WARP_DISCOVERED_KEY) === "true";
         } catch (error) {
-          return false
+          return false;
         }
       }
 
       function setWarpAccelerationDiscovered() {
         try {
-          localStorage.setItem(WARP_DISCOVERED_KEY, 'true')
+          localStorage.setItem(WARP_DISCOVERED_KEY, "true");
         } catch (error) {
           // Discovery still hides the hint when storage is unavailable.
         }
@@ -170,129 +232,149 @@
 
       function getWarpHintShownCount() {
         try {
-          const count = Number(localStorage.getItem(WARP_HINT_SHOWN_KEY) || 0)
-          return Number.isFinite(count) ? count : 0
+          const count = Number(localStorage.getItem(WARP_HINT_SHOWN_KEY) || 0);
+          return Number.isFinite(count) ? count : 0;
         } catch (error) {
-          return 0
+          return 0;
         }
       }
 
       function incrementWarpHintShownCount() {
         try {
-          localStorage.setItem(WARP_HINT_SHOWN_KEY, String(getWarpHintShownCount() + 1))
+          localStorage.setItem(
+            WARP_HINT_SHOWN_KEY,
+            String(getWarpHintShownCount() + 1),
+          );
         } catch (error) {
           // The hint remains one-time-ish only while storage is available.
         }
       }
 
       function clearWarpHintTimers() {
-        window.clearTimeout(warpHintShowTimer)
-        window.clearTimeout(warpHintHideTimer)
-        window.clearTimeout(warpHintTransitionTimer)
-        warpHintShowTimer = null
-        warpHintHideTimer = null
-        warpHintTransitionTimer = null
+        window.clearTimeout(warpHintShowTimer);
+        window.clearTimeout(warpHintHideTimer);
+        window.clearTimeout(warpHintTransitionTimer);
+        warpHintShowTimer = null;
+        warpHintHideTimer = null;
+        warpHintTransitionTimer = null;
       }
 
       function hideWarpHint() {
-        const hint = document.getElementById('warpHint')
+        const hint = document.getElementById("warpHint");
 
-        hint.classList.remove('is-visible')
-        window.clearTimeout(warpHintHideTimer)
-        window.clearTimeout(warpHintTransitionTimer)
-        warpHintHideTimer = null
+        hint.classList.remove("is-visible");
+        window.clearTimeout(warpHintHideTimer);
+        window.clearTimeout(warpHintTransitionTimer);
+        warpHintHideTimer = null;
         warpHintTransitionTimer = window.setTimeout(() => {
-          if (!hint.classList.contains('is-visible')) {
-            hint.hidden = true
+          if (!hint.classList.contains("is-visible")) {
+            hint.hidden = true;
           }
-        }, 250)
+        }, 250);
       }
 
       function showWarpHint() {
-        if (getWarpAccelerationDiscovered() || getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN) {
-          return
+        if (
+          getWarpAccelerationDiscovered() ||
+          getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN
+        ) {
+          return;
         }
 
-        const hint = document.getElementById('warpHint')
-        hint.textContent = getWarpHintText()
-        hint.hidden = false
-        incrementWarpHintShownCount()
+        const hint = document.getElementById("warpHint");
+        hint.textContent = getWarpHintText();
+        hint.hidden = false;
+        incrementWarpHintShownCount();
 
         window.requestAnimationFrame(() => {
-          hint.classList.add('is-visible')
-        })
+          hint.classList.add("is-visible");
+        });
 
-        window.clearTimeout(warpHintHideTimer)
-        warpHintHideTimer = window.setTimeout(hideWarpHint, WARP_HINT_HIDE_DELAY_MS)
+        window.clearTimeout(warpHintHideTimer);
+        warpHintHideTimer = window.setTimeout(
+          hideWarpHint,
+          WARP_HINT_HIDE_DELAY_MS,
+        );
       }
 
       function discoverWarpAcceleration() {
-        if (document.body.dataset.warp !== 'on') return
+        if (document.body.dataset.warp !== "on") return;
 
-        setWarpAccelerationDiscovered()
-        clearWarpHintTimers()
-        hideWarpHint()
+        setWarpAccelerationDiscovered();
+        clearWarpHintTimers();
+        hideWarpHint();
       }
 
       function handleWarpTouchPress(event) {
-        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return
-        if (typeof Starfield !== 'undefined') Starfield.setAccelerate(true)
-        discoverWarpAcceleration()
+        if (event.pointerType !== "touch" && event.pointerType !== "pen")
+          return;
+        if (typeof Starfield !== "undefined") Starfield.setAccelerate(true);
+        discoverWarpAcceleration();
       }
 
       function handleWarpTouchRelease(event) {
-        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return
-        if (typeof Starfield !== 'undefined') Starfield.setAccelerate(false)
+        if (event.pointerType !== "touch" && event.pointerType !== "pen")
+          return;
+        if (typeof Starfield !== "undefined") Starfield.setAccelerate(false);
       }
 
       function startWarpHint() {
-        const origin = document.getElementById('starfieldOrigin')
+        const origin = document.getElementById("starfieldOrigin");
 
         if (!isWarpHintListening) {
-          origin.addEventListener('mouseenter', discoverWarpAcceleration)
-          origin.addEventListener('pointerdown', handleWarpTouchPress)
-          origin.addEventListener('pointerup', handleWarpTouchRelease)
-          origin.addEventListener('pointercancel', handleWarpTouchRelease)
-          origin.addEventListener('lostpointercapture', handleWarpTouchRelease)
-          isWarpHintListening = true
+          origin.addEventListener("mouseenter", discoverWarpAcceleration);
+          origin.addEventListener("pointerdown", handleWarpTouchPress);
+          origin.addEventListener("pointerup", handleWarpTouchRelease);
+          origin.addEventListener("pointercancel", handleWarpTouchRelease);
+          origin.addEventListener("lostpointercapture", handleWarpTouchRelease);
+          isWarpHintListening = true;
         }
 
-        clearWarpHintTimers()
+        clearWarpHintTimers();
 
-        if (getWarpAccelerationDiscovered() || getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN) {
-          return
+        if (
+          getWarpAccelerationDiscovered() ||
+          getWarpHintShownCount() >= WARP_HINT_MAX_SHOWN
+        ) {
+          return;
         }
 
-        warpHintShowTimer = window.setTimeout(showWarpHint, WARP_HINT_SHOW_DELAY_MS)
+        warpHintShowTimer = window.setTimeout(
+          showWarpHint,
+          WARP_HINT_SHOW_DELAY_MS,
+        );
       }
 
       function stopWarpHint() {
-        const origin = document.getElementById('starfieldOrigin')
+        const origin = document.getElementById("starfieldOrigin");
 
         if (isWarpHintListening) {
-          origin.removeEventListener('mouseenter', discoverWarpAcceleration)
-          origin.removeEventListener('pointerdown', handleWarpTouchPress)
-          origin.removeEventListener('pointerup', handleWarpTouchRelease)
-          origin.removeEventListener('pointercancel', handleWarpTouchRelease)
-          origin.removeEventListener('lostpointercapture', handleWarpTouchRelease)
-          isWarpHintListening = false
+          origin.removeEventListener("mouseenter", discoverWarpAcceleration);
+          origin.removeEventListener("pointerdown", handleWarpTouchPress);
+          origin.removeEventListener("pointerup", handleWarpTouchRelease);
+          origin.removeEventListener("pointercancel", handleWarpTouchRelease);
+          origin.removeEventListener(
+            "lostpointercapture",
+            handleWarpTouchRelease,
+          );
+          isWarpHintListening = false;
         }
 
-        clearWarpHintTimers()
-        hideWarpHint()
+        clearWarpHintTimers();
+        hideWarpHint();
       }
 
       function startStarfield() {
-        if (isStarfieldActive || typeof Starfield === 'undefined') return
+        if (isStarfieldActive || typeof Starfield === "undefined") return;
 
-        const layer = document.getElementById('starfieldLayer')
-        const origin = document.getElementById('starfieldOrigin')
+        const layer = document.getElementById("starfieldLayer");
+        const origin = document.getElementById("starfieldOrigin");
 
-        Starfield.cleanup()
+        Starfield.cleanup();
         Starfield.setup({
           auto: true,
           baseSpeed: 3,
-          canvasColor: 'rgb(0, 0, 0)',
+          canvasColor: "rgb(0, 0, 0)",
           container: layer,
           hueJitter: 360,
           maxAcceleration: 2,
@@ -301,107 +383,115 @@
           decelerationRate: 0.05,
           minSpawnRadius: 80,
           maxSpawnRadius: 500,
-          starColor: 'rgb(121, 239, 118)',
-          trailLength: 0.8
-        })
-        layer.style.position = 'fixed'
-        layer.style.inset = '0'
-        Starfield.setAccelerate(false)
-        isStarfieldActive = true
+          starColor: "rgb(121, 239, 118)",
+          trailLength: 0.8,
+        });
+        layer.style.position = "fixed";
+        layer.style.inset = "0";
+        Starfield.setAccelerate(false);
+        isStarfieldActive = true;
       }
 
       function stopStarfield() {
-        if (!isStarfieldActive || typeof Starfield === 'undefined') return
+        if (!isStarfieldActive || typeof Starfield === "undefined") return;
 
-        Starfield.setAccelerate(false)
-        Starfield.cleanup()
-        isStarfieldActive = false
+        Starfield.setAccelerate(false);
+        Starfield.cleanup();
+        isStarfieldActive = false;
       }
 
       function applyWarp(isWarping) {
-        const warpToggle = document.getElementById('warpToggle')
-        const nextValue = isWarping ? 'on' : 'off'
+        const warpToggle = document.getElementById("warpToggle");
+        const nextValue = isWarping ? "on" : "off";
 
-        document.body.dataset.warp = nextValue
-        warpToggle.setAttribute('aria-pressed', String(isWarping))
-        warpToggle.textContent = isWarping ? 'Warp On' : 'Warp Off'
+        document.body.dataset.warp = nextValue;
+        warpToggle.setAttribute("aria-pressed", String(isWarping));
+        warpToggle.textContent = isWarping ? "Warp On" : "Warp Off";
         if (isWarping) {
-          startStarfield()
-          startWarpHint()
+          startStarfield();
+          startWarpHint();
         } else {
-          stopWarpHint()
-          stopStarfield()
+          stopWarpHint();
+          stopStarfield();
         }
 
         try {
-          localStorage.setItem('hof-warp', nextValue)
+          localStorage.setItem("hof-warp", nextValue);
         } catch (error) {
           // Warp still toggles when storage is unavailable.
         }
       }
 
       function initWarpToggle() {
-        const warpToggle = document.getElementById('warpToggle')
-        let savedWarp = 'off'
+        const warpToggle = document.getElementById("warpToggle");
+        let savedWarp = "off";
 
         try {
-          savedWarp = localStorage.getItem('hof-warp') || localStorage.getItem('hof-flying') || savedWarp
+          savedWarp =
+            localStorage.getItem("hof-warp") ||
+            localStorage.getItem("hof-flying") ||
+            savedWarp;
         } catch (error) {
           // Keep warp off when storage is unavailable.
         }
 
-        applyWarp(savedWarp === 'on')
-        warpToggle.addEventListener('click', () => {
-          applyWarp(document.body.dataset.warp !== 'on')
-        })
+        applyWarp(savedWarp === "on");
+        warpToggle.addEventListener("click", () => {
+          applyWarp(document.body.dataset.warp !== "on");
+        });
       }
 
       function initControlsTray() {
-        const displayControls = document.getElementById('displayControls')
-        const controlsToggle = document.getElementById('controlsToggle')
-        const controlsPanel = document.getElementById('controlsPanel')
+        const displayControls = document.getElementById("displayControls");
+        const controlsToggle = document.getElementById("controlsToggle");
+        const controlsPanel = document.getElementById("controlsPanel");
 
         function setControlsOpen(isOpen) {
-          displayControls.dataset.open = String(isOpen)
-          controlsToggle.setAttribute('aria-expanded', String(isOpen))
+          displayControls.dataset.open = String(isOpen);
+          controlsToggle.setAttribute("aria-expanded", String(isOpen));
           controlsToggle.setAttribute(
-            'aria-label',
-            isOpen ? 'Hide display controls' : 'Show display controls',
-          )
-          controlsPanel.hidden = !isOpen
+            "aria-label",
+            isOpen ? "Hide display controls" : "Show display controls",
+          );
+          controlsPanel.hidden = !isOpen;
         }
 
-        controlsToggle.addEventListener('click', () => {
-          const isOpen = controlsToggle.getAttribute('aria-expanded') === 'true'
-          setControlsOpen(!isOpen)
-        })
+        controlsToggle.addEventListener("click", () => {
+          const isOpen =
+            controlsToggle.getAttribute("aria-expanded") === "true";
+          setControlsOpen(!isOpen);
+        });
 
-        document.addEventListener('click', (event) => {
-          if (displayControls.contains(event.target)) return
-          setControlsOpen(false)
-        })
+        document.addEventListener("click", (event) => {
+          if (displayControls.contains(event.target)) return;
+          setControlsOpen(false);
+        });
       }
 
       function applyOverrides(members, overrides) {
         const generatedByRescueIndex = new Map(
           members.map((member) => [member.rescueIndex, member]),
-        )
+        );
         const overrideMembers = Array.isArray(overrides?.members)
           ? overrides.members
-          : []
+          : [];
 
         if (overrideMembers.length === 0) {
-          return [...members].sort((a, b) => a.rescueIndex - b.rescueIndex)
+          return [...members].sort((a, b) => a.rescueIndex - b.rescueIndex);
         }
 
         return overrideMembers
           .map((override, index) => {
-            const rescueIndex = Number(override.rescueIndex)
-            if (!Number.isInteger(rescueIndex) || rescueIndex < 0 || rescueIndex > 491) {
-              return null
+            const rescueIndex = Number(override.rescueIndex);
+            if (
+              !Number.isInteger(rescueIndex) ||
+              rescueIndex < 0 ||
+              rescueIndex > 491
+            ) {
+              return null;
             }
 
-            const generated = generatedByRescueIndex.get(rescueIndex) || {}
+            const generated = generatedByRescueIndex.get(rescueIndex) || {};
 
             return {
               ...generated,
@@ -409,119 +499,120 @@
               rescueIndex,
               sortOrder: index,
               catId: override.catId || generated.catId || getCatId(rescueIndex),
-            }
+            };
           })
           .filter((member) => member !== null)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
       }
 
       async function loadJson(path, required = true) {
-        const response = await fetch(path)
+        const response = await fetch(path);
 
         if (!response.ok) {
-          if (!required) return null
-          throw new Error('Failed to load ' + path)
+          if (!required) return null;
+          throw new Error("Failed to load " + path);
         }
 
-        return response.json()
+        return response.json();
       }
 
       function renderMember(member) {
-        const card = document.createElement('article')
-        card.className = 'member-card'
+        const card = document.createElement("article");
+        card.className = "member-card";
 
-        const top = document.createElement('div')
-        top.className = 'member-top'
+        const top = document.createElement("div");
+        top.className = "member-top";
 
-        const name = document.createElement('div')
-        name.className = 'member-name'
-        name.textContent = getDisplayName(member)
+        const name = document.createElement("div");
+        name.className = "member-name";
+        name.textContent = getDisplayName(member);
 
-        const handle = document.createElement('div')
-        handle.className = 'member-handle'
-        handle.textContent = getHandle(member)
+        const handle = createHandleElement(member);
 
-        top.appendChild(name)
-        top.appendChild(handle)
+        top.appendChild(name);
+        top.appendChild(handle);
 
-        const imageFrame = document.createElement('div')
-        imageFrame.className = 'member-imageFrame'
+        const imageFrame = document.createElement("div");
+        imageFrame.className = "member-imageFrame";
 
-        const img = document.createElement('img')
-        img.className = 'member-image'
-        img.alt = 'MoonCat #' + member.rescueIndex
-        img.src = getCachedCatImage(member)
+        const img = document.createElement("img");
+        img.className = "member-image";
+        img.alt = "MoonCat #" + member.rescueIndex;
+        img.src = getCachedCatImage(member);
         img.onerror = () => {
-          img.onerror = null
-          img.src = getGeneratedCatImage(member)
-        }
-        imageFrame.appendChild(img)
+          img.onerror = null;
+          img.src = getGeneratedCatImage(member);
+        };
+        imageFrame.appendChild(img);
 
-        const bottom = document.createElement('div')
-        bottom.className = 'member-bottom'
+        const bottom = document.createElement("div");
+        bottom.className = "member-bottom";
 
-        const cat = document.createElement('div')
-        cat.className = 'member-cat'
-        cat.textContent = 'MoonCat #' + member.rescueIndex
-        bottom.appendChild(cat)
+        const cat = document.createElement("div");
+        cat.className = "member-cat";
+        cat.textContent = "MoonCat #" + member.rescueIndex;
+        bottom.appendChild(cat);
 
-        if (typeof member.catName === 'string' && member.catName.trim().length > 0) {
-          const catName = document.createElement('div')
-          catName.className = 'member-catName'
-          catName.textContent = member.catName.trim()
-          bottom.appendChild(catName)
+        if (
+          typeof member.catName === "string" &&
+          member.catName.trim().length > 0
+        ) {
+          const catName = document.createElement("div");
+          catName.className = "member-catName";
+          catName.textContent = member.catName.trim();
+          bottom.appendChild(catName);
         }
 
         if (
-          typeof member.favourite === 'number' &&
+          typeof member.favourite === "number" &&
           member.favourite !== member.rescueIndex
         ) {
-          const fav = document.createElement('div')
-          fav.className = 'member-fav'
-          fav.textContent = 'Fav #' + member.favourite
-          bottom.appendChild(fav)
+          const fav = document.createElement("div");
+          fav.className = "member-fav";
+          fav.textContent = "Fav #" + member.favourite;
+          bottom.appendChild(fav);
         }
 
-        card.appendChild(top)
-        card.appendChild(imageFrame)
-        card.appendChild(bottom)
+        card.appendChild(top);
+        card.appendChild(imageFrame);
+        card.appendChild(bottom);
 
-        return card
+        return card;
       }
 
       async function start() {
-        const app = document.getElementById('app')
+        const app = document.getElementById("app");
 
         try {
           const [generatedMembers, overrides] = await Promise.all([
-            loadJson('./members.json'),
-            loadJson('./overrides.json', false),
-          ])
-          const members = applyOverrides(generatedMembers, overrides)
+            loadJson("./members.json"),
+            loadJson("./overrides.json", false),
+          ]);
+          const members = applyOverrides(generatedMembers, overrides);
 
-          const grid = document.createElement('section')
-          grid.className = 'grid'
+          const grid = document.createElement("section");
+          grid.className = "grid";
 
           members.forEach((member) => {
-            grid.appendChild(renderMember(member))
-          })
+            grid.appendChild(renderMember(member));
+          });
 
-          app.className = 'grid'
-          app.textContent = ''
-          app.replaceWith(grid)
+          app.className = "grid";
+          app.textContent = "";
+          app.replaceWith(grid);
         } catch (error) {
-          console.error(error)
-          app.className = 'error'
-          app.textContent = 'Could not load Day 1 members.'
+          console.error(error);
+          app.className = "error";
+          app.textContent = "Could not load Day 1 members.";
         }
       }
 
-      window.addEventListener('DOMContentLoaded', () => {
-        initControlsTray()
-        initThemePicker()
-        initWarpToggle()
-        start()
-      })
+      window.addEventListener("DOMContentLoaded", () => {
+        initControlsTray();
+        initThemePicker();
+        initWarpToggle();
+        start();
+      });
     </script>
   </body>
 </html>
