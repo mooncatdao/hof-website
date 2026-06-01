@@ -16,6 +16,20 @@
     return value.startsWith('@') ? value : '@' + value
   }
 
+  function isTwitterHandle(value) {
+    return typeof value === 'string' && /^@?[A-Za-z0-9_]{1,15}$/.test(value.trim())
+  }
+
+  function getTwitterHandleDisplay(value) {
+    if (!isTwitterHandle(value)) return null
+    return '(' + normalizeTwitter(value.trim()) + ')'
+  }
+
+  function getTwitterHandleUrl(value) {
+    if (!isTwitterHandle(value)) return null
+    return 'https://x.com/' + normalizeTwitter(value.trim()).slice(1)
+  }
+
   function stripEth(value) {
     return typeof value === 'string' ? value.replace(/\.eth$/i, '') : ''
   }
@@ -200,7 +214,10 @@
     getExportData,
     getExportJson,
     getExportMembers,
+    getTwitterHandleDisplay,
+    getTwitterHandleUrl,
     getWarningsForMember,
+    isTwitterHandle,
     normalizeTwitter,
     parseRescueIndex,
     stripEth,
