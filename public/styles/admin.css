@@ -9,6 +9,7 @@
   --surface: #fffdf2;
   --surface-line: #c6c9b9;
   --danger: #b42318;
+  --card-top-text-safe-offset-y: 12px;
 }
 
 * {
@@ -22,15 +23,36 @@ body {
 }
 
 body {
-  font-family: 'Trebuchet MS', 'Verdana', sans-serif;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
-    radial-gradient(circle at 74% 9%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 87% 36%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
-    radial-gradient(circle at 21% 63%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(255, 255, 255, 0.9) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 74% 9%,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 87% 36%,
+      rgba(255, 255, 255, 0.75) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 21% 63%,
+      rgba(255, 255, 255, 0.8) 0 1px,
+      transparent 2px
+    ),
     #111;
-  background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, auto;
+  background-size:
+    240px 240px,
+    310px 310px,
+    270px 270px,
+    330px 330px,
+    auto;
 }
 
 button,
@@ -93,7 +115,7 @@ select {
 }
 
 .title {
-  font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+  font-family: "Setback TT (BRK)", Georgia, "Times New Roman", serif;
   font-size: clamp(28px, 4vw, 54px);
   line-height: 0.95;
   margin: 0;
@@ -253,19 +275,40 @@ select {
 
 .preview-frame {
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
-    radial-gradient(circle at 74% 9%, rgba(255, 255, 255, 0.85) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 87% 36%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
-    radial-gradient(circle at 21% 63%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(255, 255, 255, 0.9) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 74% 9%,
+      rgba(255, 255, 255, 0.85) 0 1.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 87% 36%,
+      rgba(255, 255, 255, 0.75) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 21% 63%,
+      rgba(255, 255, 255, 0.8) 0 1px,
+      transparent 2px
+    ),
     #111;
-  background-size: 240px 240px, 310px 310px, 270px 270px, 330px 330px, auto;
+  background-size:
+    240px 240px,
+    310px 310px,
+    270px 270px,
+    330px 330px,
+    auto;
   padding: 16px 10px 18px;
   min-height: calc(100vh - 134px);
 }
 
 .preview-title,
 .preview-subtitle {
-  font-family: 'Setback TT (BRK)', Georgia, 'Times New Roman', serif;
+  font-family: "Setback TT (BRK)", Georgia, "Times New Roman", serif;
   font-weight: 700;
   color: var(--mint);
   text-align: center;
@@ -291,6 +334,8 @@ select {
 }
 
 .member-card {
+  --card-top-text-offset-y: 0px;
+
   display: grid;
   grid-template-rows: 34px 92px minmax(28px, auto);
   background: var(--panel);
@@ -301,12 +346,18 @@ select {
   min-height: 160px;
 }
 
+.member-card[data-pose="sleeping"],
+.member-card[data-pose="standing"] {
+  --card-top-text-offset-y: var(--card-top-text-safe-offset-y);
+}
+
 .member-top {
   min-height: 34px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 1px;
+  transform: translateY(var(--card-top-text-offset-y));
 }
 
 .member-name {
@@ -314,6 +365,11 @@ select {
   font-weight: 700;
   line-height: 1.05;
   word-break: break-word;
+}
+
+.member-card[data-pose="sleeping"] .member-handle,
+.member-card[data-pose="standing"] .member-handle {
+  min-height: 1.05em;
 }
 
 .member-handle {

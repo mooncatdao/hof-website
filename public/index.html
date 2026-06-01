@@ -102,6 +102,14 @@
         return LibMoonCat.getCatId(rescueIndex);
       }
 
+      function getPose(member) {
+        const traits = LibMoonCat.getTraits(
+          "basic",
+          member.catId || getCatId(member.rescueIndex),
+        );
+        return typeof traits.pose === "string" ? traits.pose : "";
+      }
+
       function getDisplayName(member) {
         if (typeof member.name === "string" && member.name.trim().length > 0) {
           return member.name.trim();
@@ -519,6 +527,7 @@
       function renderMember(member) {
         const card = document.createElement("article");
         card.className = "member-card";
+        card.dataset.pose = getPose(member);
 
         const top = document.createElement("div");
         top.className = "member-top";
