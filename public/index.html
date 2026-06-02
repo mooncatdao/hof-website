@@ -102,6 +102,10 @@
         return LibMoonCat.getCatId(rescueIndex);
       }
 
+      function getMoonCatProfileUrl(member) {
+        return "https://mooncatrescue.com/mooncats/" + member.rescueIndex;
+      }
+
       function getPose(member) {
         const traits = LibMoonCat.getTraits(
           "basic",
@@ -683,7 +687,14 @@
         img.dataset.rescueIndex = String(member.rescueIndex);
         img.dataset.catId = member.catId || getCatId(member.rescueIndex);
         setMemberImage(img);
-        imageFrame.appendChild(img);
+
+        const imageLink = document.createElement("a");
+        imageLink.className = "member-imageLink";
+        imageLink.href = getMoonCatProfileUrl(member);
+        imageLink.target = "_blank";
+        imageLink.rel = "noopener noreferrer";
+        imageLink.appendChild(img);
+        imageFrame.appendChild(imageLink);
 
         const bottom = document.createElement("div");
         bottom.className = "member-bottom";

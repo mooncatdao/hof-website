@@ -205,6 +205,46 @@ test('public image controls persist settings and refresh member images in place'
   assert.match(indexHtml, /id="accessoriesToggle"[\s\S]*?aria-pressed="false"/)
 })
 
+test('public MoonCat images link to rescue-index profiles with secure new-tab attributes', () => {
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'index.html'),
+    'utf8',
+  )
+  const profileUrlHelper = indexHtml.match(
+    /function getMoonCatProfileUrl\(member\) \{[\s\S]*?\n      \}/,
+  )
+  const imageLink = indexHtml.match(
+    /const imageLink = document\.createElement\("a"\);[\s\S]*?imageFrame\.appendChild\(imageLink\);/,
+  )
+
+  assert.notEqual(profileUrlHelper, null)
+  assert.match(
+    profileUrlHelper[0],
+    /"https:\/\/mooncatrescue\.com\/mooncats\/" \+ member\.rescueIndex/,
+  )
+  assert.notEqual(imageLink, null)
+  assert.match(imageLink[0], /imageLink\.className = "member-imageLink"/)
+  assert.match(imageLink[0], /imageLink\.href = getMoonCatProfileUrl\(member\)/)
+  assert.match(imageLink[0], /imageLink\.target = "_blank"/)
+  assert.match(imageLink[0], /imageLink\.rel = "noopener noreferrer"/)
+  assert.doesNotMatch(imageLink[0], /\.title\s*=/)
+  assert.match(indexHtml, /img\.alt = "MoonCat #" \+ member\.rescueIndex/)
+})
+
+test('public MoonCat image links zoom smoothly without layout resize or touch hover', () => {
+  const css = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'styles', 'site.css'),
+    'utf8',
+  )
+
+  assert.match(css, /\.member-imageLink\s*\{[\s\S]*?display:\s*inline-block/)
+  assert.match(css, /\.member-imageLink\s*\{[\s\S]*?line-height:\s*0/)
+  assert.match(css, /\.member-image\s*\{[\s\S]*?transition:\s*transform 150ms ease/)
+  assert.match(css, /\.member-image\s*\{[\s\S]*?will-change:\s*transform/)
+  assert.match(css, /\.member-imageLink:focus-visible \.member-image\s*\{[\s\S]*?transform:\s*scale\(1\.15\)/)
+  assert.match(css, /@media \(hover: hover\)\s*\{[\s\S]*?\.member-imageLink:hover \.member-image\s*\{[\s\S]*?transform:\s*scale\(1\.15\)/)
+})
+
 test('cache status reports missing images for newly added rescue indexes', () => {
   const cachedImages = new Set([2])
 
