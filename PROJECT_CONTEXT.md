@@ -33,6 +33,8 @@ Each card shows:
 
 The theme selector persists to `localStorage` using `hof-theme`. The warp toggle persists to `localStorage` using `hof-warp`, with a fallback read from the old `hof-flying` key. Glow and accessory image toggles persist using `hof-glow` and `hof-accessories`.
 
+Holder top text defaults to compact linked-name mode. Change `COMPACT_HOLDER_LINK_MODE` in `public/display-options.js` to `false` to restore the two-line holder name and Twitter/X handle display.
+
 ## Themes
 
 Supported public themes are:
@@ -50,7 +52,7 @@ Supported public themes are:
 
 ## Card Metadata Positioning
 
-The public renderer and admin preview attach each MoonCat's basic pose as `data-pose` on its card. Top metadata uses `--card-top-text-offset-y`, defaulting to `0px`. Sleeping and standing poses opt into the global `--card-top-text-safe-offset-y` downward offset, currently `12px`, and reserve handle-line whitespace when the handle is blank. Pouncing, stalking and unsupported poses keep the default position.
+The public renderer and admin preview attach each MoonCat's basic pose as `data-pose` on its card. Top metadata uses `--card-top-text-offset-y`, defaulting to a small downward offset on the public page. Sleeping and standing poses opt into the global `--card-top-text-safe-offset-y` downward offset, and reserve handle-line whitespace when the handle is blank. Pouncing, stalking and unsupported poses keep the default position.
 
 ## Controls
 
