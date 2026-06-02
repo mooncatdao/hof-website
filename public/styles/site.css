@@ -475,6 +475,14 @@ body[data-warp="on"] .starfieldOrigin {
   margin-top: 0;
 }
 
+.member-imageLink {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  cursor: pointer;
+  line-height: 0;
+}
+
 .member-image {
   width: auto;
   height: auto;
@@ -482,6 +490,27 @@ body[data-warp="on"] .starfieldOrigin {
   max-height: 88px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  transform-origin: center;
+  transition: transform 150ms ease;
+  will-change: transform;
+}
+
+.member-imageLink:focus-visible {
+  z-index: 2;
+}
+
+.member-imageLink:focus-visible .member-image {
+  transform: scale(1.15);
+}
+
+@media (hover: hover) {
+  .member-imageLink:hover {
+    z-index: 2;
+  }
+
+  .member-imageLink:hover .member-image {
+    transform: scale(1.15);
+  }
 }
 
 body[data-theme="ac"] .member-top,
