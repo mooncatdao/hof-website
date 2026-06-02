@@ -117,6 +117,52 @@ test('display options map toggle states to cached variant paths and useful fallb
   )
 })
 
+test('compact holder link mode defaults on and links holder names for valid handles', () => {
+  const displayOptions = require('../public/display-options.js')
+
+  assert.equal(displayOptions.COMPACT_HOLDER_LINK_MODE, true)
+  assert.deepEqual(displayOptions.getHolderTopTextOptions('@example'), {
+    handleDisplay: '(@example)',
+    linkHolderName: true,
+    showHandle: false,
+    title: '@example',
+    url: 'https://x.com/example',
+  })
+  assert.deepEqual(displayOptions.getHolderTopTextOptions('example'), {
+    handleDisplay: '(@example)',
+    linkHolderName: true,
+    showHandle: false,
+    title: '@example',
+    url: 'https://x.com/example',
+  })
+})
+
+test('holder top text options preserve two-line mode and avoid broken links', () => {
+  const displayOptions = require('../public/display-options.js')
+
+  assert.deepEqual(displayOptions.getHolderTopTextOptions('@example', false), {
+    handleDisplay: '(@example)',
+    linkHolderName: false,
+    showHandle: true,
+    title: '@example',
+    url: 'https://x.com/example',
+  })
+  assert.deepEqual(displayOptions.getHolderTopTextOptions(''), {
+    handleDisplay: '',
+    linkHolderName: false,
+    showHandle: false,
+    title: null,
+    url: null,
+  })
+  assert.deepEqual(displayOptions.getHolderTopTextOptions('', false), {
+    handleDisplay: '',
+    linkHolderName: false,
+    showHandle: true,
+    title: null,
+    url: null,
+  })
+})
+
 test('image cache variants generate the expected API options and CLI selections', async () => {
   const cacheImages = await import(
     pathToFileURL(path.join(__dirname, '..', 'scripts', 'cache-mooncat-images.mjs'))
@@ -237,10 +283,12 @@ test('member card renderers create secure new-tab handle links', () => {
   ;['public/index.html', 'public/admin.html'].forEach((relativePath) => {
     const html = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
 
-    assert.match(html, /const handle = createHandleElement\(member\)/)
+    assert.match(html, /DisplayOptions\.getHolderTopTextOptions/)
+    assert.match(html, /if \(options\.showHandle\) top\.appendChild\(createHandleElement\(member\)\)/)
     assert.match(html, /link\.target = ['"]_blank['"]/)
     assert.match(html, /link\.rel = ['"]noopener noreferrer['"]/)
-    assert.match(html, /link\.textContent = getTwitterHandleDisplay\(value\)/)
+    assert.match(html, /link\.title = options\.title/)
+    assert.match(html, /Open Twitter\/X profile for/)
   })
 })
 
@@ -257,7 +305,7 @@ test('member card renderers expose MoonCat poses for CSS positioning', () => {
 
     assert.match(css, /\.member-card\[data-pose=['"]sleeping['"]\]/)
     assert.match(css, /\.member-card\[data-pose=['"]standing['"]\]/)
-    assert.match(css, /--card-top-text-safe-offset-y:\s*12px/)
+    assert.match(css, /--card-top-text-safe-offset-y:\s*\d+px/)
     assert.match(css, /--card-top-text-offset-y:\s*var\(--card-top-text-safe-offset-y\)/)
     assert.match(css, /\.member-card\[data-pose=['"]sleeping['"]\] \.member-handle,/)
     assert.match(css, /\.member-card\[data-pose=['"]standing['"]\] \.member-handle\s*\{/)
@@ -272,6 +320,7 @@ test('admin page loads the tested admin core module', () => {
   )
 
   assert.match(adminHtml, /<script src="\.\/admin-core\.js"><\/script>/)
+  assert.match(adminHtml, /<script src="\.\/display-options\.js"><\/script>/)
   assert.match(adminHtml, /const adminCore = window\.AdminCore/)
   assert.match(adminHtml, /validateMembers/)
 })

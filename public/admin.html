@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="./styles/admin.css" />
     <link rel="preload" href="./libmooncat-limited.js" as="script" />
     <link rel="preload" href="./admin-core.js" as="script" />
+    <link rel="preload" href="./display-options.js" as="script" />
     <script src="./libmooncat-limited.js"></script>
     <script src="./admin-core.js"></script>
+    <script src="./display-options.js"></script>
   </head>
   <body>
     <main class="page">
@@ -95,14 +97,6 @@
         return adminCore.normalizeTwitter(value);
       }
 
-      function getTwitterHandleDisplay(value) {
-        return adminCore.getTwitterHandleDisplay(value);
-      }
-
-      function getTwitterHandleUrl(value) {
-        return adminCore.getTwitterHandleUrl(value);
-      }
-
       function stripEth(value) {
         return adminCore.stripEth(value);
       }
@@ -148,21 +142,56 @@
         const handle = document.createElement("div");
         handle.className = "member-handle";
 
-        const value = getHandle(member);
-        const url = getTwitterHandleUrl(value);
-        if (url === null) {
-          handle.textContent = value;
+        const options = DisplayOptions.getHolderTopTextOptions(
+          getHandle(member),
+          false,
+        );
+        if (options.url === null) {
+          handle.textContent = options.handleDisplay;
           return handle;
         }
 
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = getTwitterHandleDisplay(value);
-        handle.appendChild(link);
+        handle.appendChild(
+          createTwitterLink(
+            options.handleDisplay,
+            options,
+            getDisplayName(member),
+          ),
+        );
 
         return handle;
+      }
+
+      function createTwitterLink(text, options, holderName) {
+        const link = document.createElement("a");
+        link.href = options.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.title = options.title;
+        link.setAttribute(
+          "aria-label",
+          "Open Twitter/X profile for " + holderName,
+        );
+        link.textContent = text;
+        return link;
+      }
+
+      function appendHolderTopText(top, member) {
+        const holderName = getDisplayName(member);
+        const options = DisplayOptions.getHolderTopTextOptions(
+          getHandle(member),
+        );
+        const name = document.createElement("div");
+        name.className = "member-name";
+
+        if (options.linkHolderName) {
+          name.appendChild(createTwitterLink(holderName, options, holderName));
+        } else {
+          name.textContent = holderName;
+        }
+
+        top.appendChild(name);
+        if (options.showHandle) top.appendChild(createHandleElement(member));
       }
 
       function getCachedCatImage(member) {
@@ -472,14 +501,7 @@
         const top = document.createElement("div");
         top.className = "member-top";
 
-        const name = document.createElement("div");
-        name.className = "member-name";
-        name.textContent = getDisplayName(member);
-
-        const handle = createHandleElement(member);
-
-        top.appendChild(name);
-        top.appendChild(handle);
+        appendHolderTopText(top, member);
 
         const imageFrame = document.createElement("div");
         imageFrame.className = "member-imageFrame";
