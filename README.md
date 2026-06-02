@@ -73,6 +73,12 @@ npm run preview
 
 Wrangler serves static files from `public/` and the Pages Functions-compatible routes from `functions/`.
 
+### Subdirectory Hosting
+
+The public static site is subdirectory-safe. It can be copied from `public/` and hosted at `/hof/` or a similar path because its public assets, cached MoonCat images and JSON data files are loaded with relative URLs.
+
+This applies to the public Hall of Fame page only. The optional admin editor and its authenticated API routes are intended for a deployment that provides the configured root-level Cloudflare Pages Functions routes.
+
 ## Available Scripts
 
 ```bash
