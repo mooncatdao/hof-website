@@ -14,7 +14,7 @@
   --star-medium: 0.8;
   --star-soft: 0.75;
   --star-faint: 0.7;
-  --card-top-text-safe-offset-y: 12px;
+  --card-top-text-safe-offset-y: 22px;
 }
 
 body[data-theme="og"] {
@@ -287,6 +287,7 @@ body[data-warp="on"] .starfieldOrigin {
 .titleBlock {
   justify-self: center;
   padding-left: 144px;
+  padding-top: 16px;
 }
 
 .title,
@@ -306,6 +307,7 @@ body[data-warp="on"] .starfieldOrigin {
   justify-self: end;
   min-width: 44px;
   text-align: left;
+  padding-top: 16px;
 }
 
 .controlsToggle {
@@ -405,7 +407,7 @@ body[data-warp="on"] .starfieldOrigin {
 }
 
 .member-card {
-  --card-top-text-offset-y: 0px;
+  --card-top-text-offset-y: 4px;
 
   display: grid;
   grid-template-rows: 34px 92px minmax(28px, auto);
@@ -423,6 +425,8 @@ body[data-warp="on"] .starfieldOrigin {
 }
 
 .member-top {
+  position: relative;
+  z-index: 2;
   min-height: 34px;
   display: flex;
   flex-direction: column;
@@ -436,6 +440,13 @@ body[data-warp="on"] .starfieldOrigin {
   font-weight: 700;
   line-height: 1.05;
   word-break: break-word;
+}
+
+.member-name a {
+  display: inline-block;
+  color: inherit;
+  line-height: inherit;
+  text-decoration: none;
 }
 
 .member-card[data-pose="sleeping"] .member-handle,
@@ -509,8 +520,12 @@ body[data-theme="ac-t"] .member-image {
   margin-top: 0;
 }
 
+body:not([data-theme="ac-t"]) .member-bottom {
+  transform: translateY(3px);
+}
+
 body[data-theme="ac-t"] .member-bottom {
-  transform: translateY(4px);
+  transform: translateY(6px);
 }
 
 body[data-theme="ac-t"] .grid {

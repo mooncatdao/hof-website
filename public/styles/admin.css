@@ -367,6 +367,11 @@ select {
   word-break: break-word;
 }
 
+.member-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .member-card[data-pose="sleeping"] .member-handle,
 .member-card[data-pose="standing"] .member-handle {
   min-height: 1.05em;
