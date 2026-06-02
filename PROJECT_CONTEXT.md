@@ -31,6 +31,8 @@ Each card shows:
 - Optional cat name
 - Optional favorite MoonCat if it differs from the rendered rescue index
 
+Public MoonCat images link to `https://mooncatrescue.com/mooncats/<rescueIndex>` and use a transform-based hover or keyboard-focus zoom without resizing their card layout.
+
 The theme selector persists to `localStorage` using `hof-theme`. The warp toggle persists to `localStorage` using `hof-warp`, with a fallback read from the old `hof-flying` key. Glow and accessory image toggles persist using `hof-glow` and `hof-accessories`.
 
 Holder top text defaults to compact linked-name mode. Change `COMPACT_HOLDER_LINK_MODE` in `public/display-options.js` to `false` to restore the two-line holder name and Twitter/X handle display.
