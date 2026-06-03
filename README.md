@@ -79,6 +79,32 @@ The public static site is subdirectory-safe. It can be copied from `public/` and
 
 This applies to the public Hall of Fame page only. The optional admin editor and its authenticated API routes are intended for a deployment that provides the configured root-level Cloudflare Pages Functions routes.
 
+### DAO Website Sync
+
+The `.github/workflows/sync-public-hof-to-dao-site.yml` workflow mirrors the public Hall of Fame viewer into `mooncatdao/mooncatdao-website` at:
+
+```text
+public/hof/
+```
+
+The synced site is intended to run from `/hof/`. The workflow runs on pushes to `main` when public viewer files change, and it can also be run manually with `workflow_dispatch`. It opens a pull request in `mooncatdao/mooncatdao-website` instead of pushing directly to that repo's main branch.
+
+The source repository must define a GitHub Actions secret named `DAO_WEBSITE_SYNC_TOKEN`. That token needs access to check out `mooncatdao/mooncatdao-website`, push the sync branch, and create the pull request.
+
+Only the public static viewer files are mirrored:
+
+- `public/index.html`
+- `public/display-options.js`
+- `public/libmooncat-limited.js`
+- `public/styles/site.css`
+- `public/vendor/starfield.js`
+- `public/vendor/starfield.LICENSE.txt`
+- `public/assets/**`
+- `public/members.json`
+- `public/overrides.json`
+
+Admin, auth, API, editor and Cloudflare Functions files are intentionally excluded from the sync.
+
 ## Available Scripts
 
 ```bash
