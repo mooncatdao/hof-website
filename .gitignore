@@ -1,6 +1,7 @@
 .DS_Store
 *:Zone.Identifier
 node_modules/
+test-artifacts/
 
 # wrangler files
 .wrangler

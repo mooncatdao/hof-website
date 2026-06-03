@@ -148,6 +148,10 @@ body {
   min-height: 100%;
 }
 
+html {
+    color-scheme: dark;
+}
+
 body {
   position: relative;
   font-family: "Trebuchet MS", "Verdana", sans-serif;
@@ -592,6 +596,11 @@ body[data-theme="ac-t"] .grid {
   font-size: 18px;
 }
 
+img {
+    filter: none;
+    mix-blend-mode: normal;
+}
+
 @media (max-width: 760px) {
   .page {
     width: min(100vw - 18px, 860px);
@@ -607,25 +616,113 @@ body[data-theme="ac-t"] .grid {
   }
 
   .displayControls {
-    justify-self: center;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 66px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    z-index: 10;
+    justify-self: auto;
     width: auto;
+    padding-top: 0;
+    opacity: 0.48;
+    transition: opacity 0.15s ease;
+  }
+
+  .displayControls:hover,
+  .displayControls:focus-within,
+  .displayControls[data-open="true"] {
+    opacity: 0.95;
+  }
+
+  .controlsToggle img {
+    opacity: 0.7;
   }
 
   .controlsPanel {
-    right: 50%;
+    right: 0;
     width: min(220px, calc(100vw - 32px));
-    transform: translateX(50%);
+    transform: none;
   }
 
   .grid {
-    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .member-card {
+    --card-top-text-safe-offset-y: 2px;
+
+    grid-template-rows: 32px 76px minmax(30px, auto);
+    min-height: 146px;
+    padding: 5px 4px 7px;
+  }
+
+  .member-top {
+    min-height: 32px;
+  }
+
+  .member-name {
+    font-size: 10px;
+  }
+
+  .member-handle,
+  .member-fav,
+  .member-catName {
+    font-size: 9px;
+  }
+
+  .member-imageFrame {
+    height: 76px;
+    padding-bottom: 3px;
+  }
+
+  .member-image {
+    max-height: 72px;
+  }
+
+  .member-cat {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 340px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 7px;
   }
 
   .member-card {
-    grid-template-rows: 34px 92px minmax(28px, auto);
-    min-height: 168px;
+    --card-top-text-safe-offset-y: 8px;
+
+    grid-template-rows: 34px 88px minmax(28px, auto);
+    min-height: 162px;
     padding: 6px 5px 8px;
+  }
+
+  .member-top {
+    min-height: 34px;
+  }
+
+  .member-name {
+    font-size: 11px;
+  }
+
+  .member-handle,
+  .member-fav,
+  .member-catName {
+    font-size: 10px;
+  }
+
+  .member-imageFrame {
+    height: 88px;
+    padding-bottom: 4px;
+  }
+
+  .member-image {
+    max-height: 84px;
+  }
+
+  .member-cat {
+    font-size: 11px;
   }
 }
 
