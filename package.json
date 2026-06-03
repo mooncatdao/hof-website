@@ -9,6 +9,7 @@
     "cache:images": "node scripts/cache-mooncat-images.mjs",
     "deploy": "wrangler deploy",
     "preview": "wrangler dev",
+    "screenshots:mobile": "node scripts/capture-mobile-screenshots.mjs",
     "test": "node --test"
   },
   "dependencies": {
@@ -18,6 +19,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "wrangler": "^4.95.0"
   }
 }
