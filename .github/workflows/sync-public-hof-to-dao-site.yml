@@ -40,12 +40,12 @@ jobs:
           token: ${{ secrets.DAO_WEBSITE_SYNC_TOKEN }}
           path: mooncatdao-website
 
-      # The public HOF viewer is mirrored into mooncatdao-website/public/hof so
+      # The public HOF viewer is mirrored into mooncatdao-website/hof so
       # it can be served from the /hof/ subdirectory on the DAO website.
       - name: Prepare target HOF directory
         run: |
-          rm -rf mooncatdao-website/public/hof
-          mkdir -p mooncatdao-website/public/hof
+          rm -rf mooncatdao-website/hof
+          mkdir -p mooncatdao-website/hof
 
       # Copy a conservative whitelist of files used by public/index.html.
       # Admin, auth, API, Cloudflare Functions and editor files are intentionally
@@ -54,19 +54,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          mkdir -p mooncatdao-website/public/hof/styles
-          mkdir -p mooncatdao-website/public/hof/vendor
+          mkdir -p mooncatdao-website/hof/styles
+          mkdir -p mooncatdao-website/hof/vendor
 
-          cp hof-website/public/index.html mooncatdao-website/public/hof/index.html
-          cp hof-website/public/display-options.js mooncatdao-website/public/hof/display-options.js
-          cp hof-website/public/libmooncat-limited.js mooncatdao-website/public/hof/libmooncat-limited.js
-          cp hof-website/public/members.json mooncatdao-website/public/hof/members.json
-          cp hof-website/public/overrides.json mooncatdao-website/public/hof/overrides.json
-          cp hof-website/public/styles/site.css mooncatdao-website/public/hof/styles/site.css
-          cp hof-website/public/vendor/starfield.js mooncatdao-website/public/hof/vendor/starfield.js
-          cp hof-website/public/vendor/starfield.LICENSE.txt mooncatdao-website/public/hof/vendor/starfield.LICENSE.txt
+          cp hof-website/public/index.html mooncatdao-website/hof/index.html
+          cp hof-website/public/display-options.js mooncatdao-website/hof/display-options.js
+          cp hof-website/public/libmooncat-limited.js mooncatdao-website/hof/libmooncat-limited.js
+          cp hof-website/public/members.json mooncatdao-website/hof/members.json
+          cp hof-website/public/overrides.json mooncatdao-website/hof/overrides.json
+          cp hof-website/public/styles/site.css mooncatdao-website/hof/styles/site.css
+          cp hof-website/public/vendor/starfield.js mooncatdao-website/hof/vendor/starfield.js
+          cp hof-website/public/vendor/starfield.LICENSE.txt mooncatdao-website/hof/vendor/starfield.LICENSE.txt
 
-          cp -R hof-website/public/assets mooncatdao-website/public/hof/assets
+          cp -R hof-website/public/assets mooncatdao-website/hof/assets
 
       - name: Create pull request in DAO website repo
         uses: peter-evans/create-pull-request@v6
@@ -81,4 +81,8 @@ jobs:
             Automated sync of the public Hall of Fame static site from mooncatdao/hof-website.
 
             This sync intentionally includes only public-facing files and excludes admin/auth/API functionality.
+
+            Target path:
+
+            - /hof/
           labels: automated-sync
