@@ -32,7 +32,7 @@ jobs:
           path: hof-website
 
       # Requires a repo secret named DAO_WEBSITE_SYNC_TOKEN with permission to
-      # push branches and open pull requests in mooncatdao/mooncatdao-website.
+      # push directly to mooncatdao/mooncatdao-website.
       - name: Checkout mooncatdao-website target repo
         uses: actions/checkout@v4
         with:
@@ -68,21 +68,20 @@ jobs:
 
           cp -R hof-website/public/assets mooncatdao-website/hof/assets
 
-      - name: Create pull request in DAO website repo
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.DAO_WEBSITE_SYNC_TOKEN }}
-          path: mooncatdao-website
-          branch: sync/hof-public-site
-          delete-branch: true
-          title: "Sync public HOF site"
-          commit-message: "Sync public HOF site from hof-website"
-          body: |
-            Automated sync of the public Hall of Fame static site from mooncatdao/hof-website.
+      - name: Commit and push directly to DAO website repo
+        run: |
+          set -euo pipefail
 
-            This sync intentionally includes only public-facing files and excludes admin/auth/API functionality.
+          cd mooncatdao-website
 
-            Target path:
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            - /hof/
-          labels: automated-sync
+          if git diff --quiet -- hof; then
+            echo "No HOF changes to sync."
+            exit 0
+          fi
+
+          git add hof
+          git commit -m "Sync public HOF site from hof-website"
+          git push origin HEAD:main
