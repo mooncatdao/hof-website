@@ -38,17 +38,27 @@
           >
             <img src="./assets/full-moon.png" alt="" aria-hidden="true" />
           </button>
+          <div
+            id="themeHint"
+            class="themeHint"
+            aria-live="polite"
+            hidden
+          >
+            <div class="themeHint-arrow" aria-hidden="true">⤴︎</div>
+            <div class="themeHint-copy">Themes and Options</div>
+            <button class="themeHint-hide" type="button">HIDE</button>
+          </div>
           <div id="controlsPanel" class="controlsPanel" hidden>
             <label class="themePicker">
               <select id="themeSelect" aria-label="Select Hall of Fame theme">
+                <option value="ac-t">Adoption Center</option>
+                <option value="ac">AC OnlyCats</option>
                 <option value="og">OG</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
                 <option value="obsidian">Obsidian</option>
                 <option value="deepspace">DeepSpace</option>
                 <option value="onlycats">OnlyCats</option>
-                <option value="ac">AC</option>
-                <option value="ac-t">AC-T</option>
               </select>
             </label>
             <button
@@ -307,16 +317,16 @@
 
       function applyTheme(theme) {
         const allowedThemes = new Set([
+          "ac-t",
+          "ac",
           "og",
           "light",
           "dark",
           "obsidian",
           "deepspace",
           "onlycats",
-          "ac",
-          "ac-t",
         ]);
-        const nextTheme = allowedThemes.has(theme) ? theme : "og";
+        const nextTheme = allowedThemes.has(theme) ? theme : "ac-t";
 
         document.body.dataset.theme = nextTheme;
 
@@ -329,7 +339,7 @@
 
       function initThemePicker() {
         const themeSelect = document.getElementById("themeSelect");
-        let savedTheme = "og";
+        let savedTheme = "ac-t";
 
         try {
           savedTheme = localStorage.getItem("hof-theme") || savedTheme;
@@ -342,6 +352,104 @@
         themeSelect.addEventListener("change", () =>
           applyTheme(themeSelect.value),
         );
+      }
+
+      let themeHintTransitionTimer = null;
+      const THEME_HINT_VIEWS_KEY = "hofThemeHintViews";
+      const THEME_HINT_HIDDEN_KEY = "hofThemeHintHidden";
+      const THEME_HINT_MAX_VIEWS = 2;
+
+      function getThemeHintHidden() {
+        try {
+          return localStorage.getItem(THEME_HINT_HIDDEN_KEY) === "true";
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function setThemeHintHidden() {
+        try {
+          localStorage.setItem(THEME_HINT_HIDDEN_KEY, "true");
+        } catch (error) {
+          // The hint still hides for this page when storage is unavailable.
+        }
+      }
+
+      function getThemeHintViews() {
+        try {
+          const count = Number(localStorage.getItem(THEME_HINT_VIEWS_KEY) || 0);
+          return Number.isFinite(count) ? count : 0;
+        } catch (error) {
+          return 0;
+        }
+      }
+
+      function incrementThemeHintViews() {
+        try {
+          localStorage.setItem(
+            THEME_HINT_VIEWS_KEY,
+            String(getThemeHintViews() + 1),
+          );
+        } catch (error) {
+          // The hint remains early-use only while storage is available.
+        }
+      }
+
+      function clearThemeHintTimers() {
+        window.clearTimeout(themeHintTransitionTimer);
+        themeHintTransitionTimer = null;
+      }
+
+      function hideThemeHint() {
+        const hint = document.getElementById("themeHint");
+        const displayControls = document.getElementById("displayControls");
+        const controlsToggle = document.getElementById("controlsToggle");
+
+        hint.classList.remove("is-visible");
+        displayControls.classList.remove("is-hinting");
+        controlsToggle.classList.remove("is-highlighted");
+        window.clearTimeout(themeHintTransitionTimer);
+        themeHintTransitionTimer = window.setTimeout(() => {
+          if (!hint.classList.contains("is-visible")) {
+            hint.hidden = true;
+          }
+        }, 250);
+      }
+
+      function dismissThemeHint() {
+        setThemeHintHidden();
+        clearThemeHintTimers();
+        hideThemeHint();
+      }
+
+      function showThemeHint() {
+        if (
+          getThemeHintHidden() ||
+          getThemeHintViews() >= THEME_HINT_MAX_VIEWS
+        ) {
+          return;
+        }
+
+        const hint = document.getElementById("themeHint");
+        const displayControls = document.getElementById("displayControls");
+        const controlsToggle = document.getElementById("controlsToggle");
+
+        hint.hidden = false;
+        displayControls.classList.add("is-hinting");
+        controlsToggle.classList.add("is-highlighted");
+        incrementThemeHintViews();
+
+        window.requestAnimationFrame(() => {
+          hint.classList.add("is-visible");
+        });
+      }
+
+      function initThemeHint() {
+        const hint = document.getElementById("themeHint");
+        const hideButton = hint.querySelector(".themeHint-hide");
+
+        hideButton.addEventListener("click", dismissThemeHint);
+        showThemeHint();
       }
 
       let isStarfieldActive = false;
@@ -612,6 +720,7 @@
         controlsToggle.addEventListener("click", () => {
           const isOpen =
             controlsToggle.getAttribute("aria-expanded") === "true";
+          hideThemeHint();
           setControlsOpen(!isOpen);
         });
 
@@ -762,6 +871,7 @@
       window.addEventListener("DOMContentLoaded", () => {
         initControlsTray();
         initThemePicker();
+        initThemeHint();
         initWarpToggle();
         initGlowToggle();
         initAccessoriesToggle();

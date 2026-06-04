@@ -284,6 +284,29 @@ test('public image controls persist settings and refresh member images in place'
   assert.match(indexHtml, /id="accessoriesToggle"[\s\S]*?aria-pressed="false"/)
 })
 
+test('public theme controls include an early-use dismissible hint', () => {
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'index.html'),
+    'utf8',
+  )
+  const siteCss = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'styles', 'site.css'),
+    'utf8',
+  )
+
+  assert.match(indexHtml, /id="themeHint"[\s\S]*?Themes and Options/)
+  assert.match(indexHtml, /class="themeHint-hide"[\s\S]*?HIDE/)
+  assert.match(indexHtml, /THEME_HINT_VIEWS_KEY = "hofThemeHintViews"/)
+  assert.match(indexHtml, /THEME_HINT_HIDDEN_KEY = "hofThemeHintHidden"/)
+  assert.match(indexHtml, /THEME_HINT_MAX_VIEWS = 2/)
+  assert.match(indexHtml, /controlsToggle\.classList\.add\("is-highlighted"\)/)
+  assert.match(siteCss, /\.controlsToggle\.is-highlighted\s*\{[\s\S]*?outline:\s*2px solid var\(--mint\)/)
+  assert.match(siteCss, /\.themeHint\s*\{[\s\S]*?right:\s*0/)
+  assert.match(siteCss, /\.themeHint\s*\{[\s\S]*?background:\s*#f0f4df/)
+  assert.match(siteCss, /\.displayControls\.is-hinting,/)
+  assert.match(siteCss, /\.themeHint-arrow\s*\{[\s\S]*?font-size:\s*24px/)
+})
+
 test('public MoonCat images link to rescue-index profiles with secure new-tab attributes', () => {
   const indexHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'index.html'),
