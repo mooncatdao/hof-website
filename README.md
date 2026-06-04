@@ -15,7 +15,7 @@ The site displays a curated set of MoonCats and their holders using generated on
 - Cloudflare Pages Functions-compatible admin routes
 - GitHub OAuth organization login for the admin editor
 - Admin Save flow that commits curated overrides back to GitHub
-- Automated GitHub Actions workflows for member updates, MoonCat name sync, image caching and GitHub Pages deployment
+- Automated GitHub Actions workflows for member updates, MoonCat name sync, image caching, GitHub Pages deployment and DAO website sync
 - Node test suite for admin logic
 
 ## License
@@ -84,12 +84,17 @@ This applies to the public Hall of Fame page only. The optional admin editor and
 The `.github/workflows/sync-public-hof-to-dao-site.yml` workflow mirrors the public Hall of Fame viewer into `mooncatdao/mooncatdao-website` at:
 
 ```text
-public/hof/
+hof/
 ```
 
-The synced site is intended to run from `/hof/`. The workflow runs on pushes to `main` when public viewer files change, and it can also be run manually with `workflow_dispatch`. It opens a pull request in `mooncatdao/mooncatdao-website` instead of pushing directly to that repo's main branch.
+The synced site is intended to run from `/hof/`. The workflow runs on pushes to
+`main` when public viewer files change, and it can also be run manually with
+`workflow_dispatch`. When the copied files differ, it commits and pushes
+directly to `mooncatdao/mooncatdao-website` `main`.
 
-The source repository must define a GitHub Actions secret named `DAO_WEBSITE_SYNC_TOKEN`. That token needs access to check out `mooncatdao/mooncatdao-website`, push the sync branch, and create the pull request.
+The source repository must define a GitHub Actions secret named
+`DAO_WEBSITE_SYNC_TOKEN`. That token needs access to check out
+`mooncatdao/mooncatdao-website` and push directly to its `main` branch.
 
 Only the public static viewer files are mirrored:
 
@@ -117,7 +122,9 @@ Regenerates `public/members.json`.
 npm run cache:images
 ```
 
-Caches MoonCat images for the curated members listed in `public/overrides.json`.
+Caches regular MoonCat images for the curated members listed in
+`public/overrides.json`. See [MoonCat Image Cache](#mooncat-image-cache) for
+variant options.
 
 ```bash
 npm run sync:cat-names
@@ -167,9 +174,12 @@ Runs the Node test suite.
 │       ├── github.js
 │       └── security.js
 ├── public/
+│   ├── _headers
 │   ├── admin-core.js
 │   ├── admin.html
+│   ├── display-options.js
 │   ├── index.html
+│   ├── libmooncat-limited.js
 │   ├── members.json
 │   ├── overrides.json
 │   ├── styles/
@@ -179,10 +189,15 @@ Runs the Node test suite.
 │   └── assets/
 │       └── mooncats/
 │           ├── manifest.json
-│           └── regular/
+│           ├── regular/
+│           ├── glow/
+│           ├── accessorized/
+│           └── accessorized-glow/
 ├── scripts/
 │   ├── cache-mooncat-images.mjs
+│   ├── capture-mobile-screenshots.mjs
 │   ├── dayoneclub.mjs
+│   ├── sync-mooncat-names.mjs
 │   └── lib/
 ├── test/
 ├── .github/workflows/
@@ -246,11 +261,18 @@ Fame display.
 
 ## MoonCat Image Cache
 
-Cached MoonCat PNGs live in:
+Cached MoonCat PNGs live in variant directories under:
 
 ```text
-public/assets/mooncats/regular/
+public/assets/mooncats/
 ```
+
+Current variants are:
+
+- `regular`
+- `glow`
+- `accessorized`
+- `accessorized-glow`
 
 The image cache manifest is stored at:
 
@@ -264,7 +286,24 @@ Refresh cached images with:
 npm run cache:images
 ```
 
-The cache script reads curated rescue indexes from `public/overrides.json`.
+By default, this refreshes the `regular` variant for curated rescue indexes in
+`public/overrides.json`.
+
+Refresh every supported variant with:
+
+```bash
+npm run cache:images -- --all
+```
+
+Refresh one non-default variant with:
+
+```bash
+npm run cache:images -- --variant=glow
+```
+
+Supported variant names are `regular`, `glow`, `accessorized`, and
+`accessorized-glow`. Add `--force` to re-download images even when the manifest
+matches the existing cached file metadata.
 
 It currently uses the MoonCats community API:
 
@@ -278,13 +317,16 @@ with these image options:
 scale=2
 padding=0
 backgroundColor=transparent
-acc=
-glow=false
 ```
 
-Only regular MoonCat images are currently supported by the cache script.
+Variant-specific options add `glow=true` for glow variants and omit `acc=` for
+accessorized variants so the API can render owned accessories.
 
-If cached images are missing, the browser can fall back to locally generated `LibMoonCat` images.
+The public page chooses cached images according to the viewer's Glow and
+Accessories toggles. If a selected variant image is missing, it falls back
+through compatible cached variants and then to a locally generated `LibMoonCat`
+image. The admin editor uses the regular cached image and falls back to
+`LibMoonCat` generation if that file is missing.
 
 ![Admin Editor](/admin.png)
 
@@ -376,7 +418,7 @@ Runs when `public/overrides.json`, the cache script, package files, or the workf
 It runs:
 
 ```bash
-npm run cache:images
+npm run cache:images -- --all
 ```
 
 Then commits updated files under:
@@ -384,6 +426,20 @@ Then commits updated files under:
 ```text
 public/assets/mooncats
 ```
+
+The workflow refreshes all supported image variants.
+
+### Sync MoonCat Names
+
+Runs weekly and can also be triggered manually.
+
+It runs:
+
+```bash
+npm run sync:cat-names
+```
+
+Then opens a pull request when `public/overrides.json` changed.
 
 ### Update Members
 
@@ -400,6 +456,13 @@ Then commits updated `public/members.json` if it changed.
 ### Deploy Pages
 
 Deploys the `public/` directory to GitHub Pages when relevant public files change on `main`, or when manually triggered.
+
+### Sync public HOF site to DAO website
+
+Runs when public viewer files change on `main`, or when manually triggered.
+It copies the public static Hall of Fame files into the
+`mooncatdao/mooncatdao-website` `hof/` directory and pushes directly to that
+repo's `main` branch when files changed.
 
 ## Testing
 

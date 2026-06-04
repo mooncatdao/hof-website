@@ -66,8 +66,15 @@ JSON file.
 
 ## Image Cache
 
-Cached MoonCat PNGs live under `public/assets/mooncats/regular/`, with metadata
-stored in `public/assets/mooncats/manifest.json`.
+Cached MoonCat PNGs live under `public/assets/mooncats/`, with metadata stored
+in `public/assets/mooncats/manifest.json`.
+
+The cache supports these variants:
+
+- `regular`
+- `glow`
+- `accessorized`
+- `accessorized-glow`
 
 After changing `public/overrides.json`, refresh the cache:
 
@@ -75,10 +82,39 @@ After changing `public/overrides.json`, refresh the cache:
 npm run cache:images
 ```
 
-The script reads curated rescue indexes from `public/overrides.json` and
-updates the tracked cached images and manifest. On `main`, the
-`Cache MoonCat Images` GitHub Actions workflow also refreshes and commits the
-image cache after relevant changes are merged.
+That command reads curated rescue indexes from `public/overrides.json` and
+updates the tracked regular cached images and manifest. To refresh all variants,
+run:
+
+```bash
+npm run cache:images -- --all
+```
+
+To refresh one variant, run:
+
+```bash
+npm run cache:images -- --variant=glow
+```
+
+On `main`, the `Cache MoonCat Images` GitHub Actions workflow also refreshes
+and commits all supported image cache variants after relevant changes are
+merged.
+
+## DAO Website Sync
+
+The public Hall of Fame viewer is mirrored into
+`mooncatdao/mooncatdao-website` by
+`.github/workflows/sync-public-hof-to-dao-site.yml`.
+
+On pushes to `main` that change public viewer files, and on manual
+`workflow_dispatch` runs, the workflow copies the static HOF files into the
+target repo's `hof/` directory. If those files changed, it commits and pushes
+directly to `mooncatdao/mooncatdao-website` `main`; it does not open a pull
+request in the target repo.
+
+Because this sync bypasses target-repo PR review, review source PRs carefully
+when they change public viewer files, `public/members.json`,
+`public/overrides.json`, cached assets, or the sync workflow itself.
 
 ## Admin And Cloudflare
 
