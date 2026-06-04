@@ -37,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Cache MoonCat Images
-        run: npm run cache:images
+        run: npm run cache:images -- --all
 
       - name: Commit Updated Image Cache
         run: |
