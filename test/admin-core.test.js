@@ -192,6 +192,85 @@ test('image cache variants generate the expected API options and CLI selections'
   assert.doesNotMatch(cacheImages.getImageUrl(304, 'accessorized'), /[?&]acc=/)
 })
 
+test('MoonCat name sync trims API names and preserves emoji', async () => {
+  const nameSync = await import(
+    pathToFileURL(path.join(__dirname, '..', 'scripts', 'sync-mooncat-names.mjs'))
+  )
+
+  assert.equal(
+    nameSync.extractApiName({
+      name: {
+        isNamed: true,
+        value: '  BokkyPooBah❤️Anna  ',
+      },
+    }),
+    'BokkyPooBah❤️Anna',
+  )
+})
+
+test('MoonCat name sync updates cat names without touching unrelated overrides', async () => {
+  const nameSync = await import(
+    pathToFileURL(path.join(__dirname, '..', 'scripts', 'sync-mooncat-names.mjs'))
+  )
+  const overrides = {
+    members: [
+      {
+        rescueIndex: 17,
+        name: 'BokkyPooBah',
+        handle: '@BokkyPooBah',
+        catName: 'Old Name',
+      },
+      {
+        rescueIndex: 39,
+        name: 'damn',
+        handle: '@paulocete',
+        catName: 'Whiskers',
+      },
+    ],
+  }
+  const apiNames = new Map([[17, 'BokkyPooBah❤️Anna']])
+  const updates = nameSync.getCatNameUpdates(overrides, apiNames)
+  const nextOverrides = nameSync.applyCatNameUpdates(overrides, updates)
+
+  assert.deepEqual(updates, [
+    {
+      index: 0,
+      rescueIndex: 17,
+      oldValue: 'Old Name',
+      newValue: 'BokkyPooBah❤️Anna',
+    },
+  ])
+  assert.deepEqual(nextOverrides.members[0], {
+    rescueIndex: 17,
+    name: 'BokkyPooBah',
+    handle: '@BokkyPooBah',
+    catName: 'BokkyPooBah❤️Anna',
+  })
+  assert.deepEqual(nextOverrides.members[1], overrides.members[1])
+  assert.deepEqual(overrides.members[0].catName, 'Old Name')
+})
+
+test('MoonCat name sync does not wipe local cat names when API names are missing', async () => {
+  const nameSync = await import(
+    pathToFileURL(path.join(__dirname, '..', 'scripts', 'sync-mooncat-names.mjs'))
+  )
+  const overrides = {
+    members: [
+      {
+        rescueIndex: 39,
+        name: 'damn',
+        handle: '@paulocete',
+        catName: 'Whiskers',
+      },
+    ],
+  }
+
+  assert.equal(nameSync.extractApiName({ name: { isNamed: false } }), null)
+  assert.deepEqual(nameSync.getCatNameUpdates(overrides, new Map()), [])
+  assert.deepEqual(nameSync.getCatNameUpdates(overrides, new Map([[39, null]])), [])
+  assert.deepEqual(nameSync.getCatNameUpdates(overrides, new Map([[39, '']])), [])
+})
+
 test('public image controls persist settings and refresh member images in place', () => {
   const indexHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'index.html'),
