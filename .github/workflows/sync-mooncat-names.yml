@@ -1,0 +1,47 @@
+name: Sync MoonCat Names
+
+on:
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-mooncat-names
+  cancel-in-progress: true
+
+jobs:
+  sync-mooncat-names:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Sync MoonCat Names
+        run: npm run sync:cat-names
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: sync/mooncat-names
+          delete-branch: true
+          title: "chore: sync MoonCat API names"
+          commit-message: "chore: sync MoonCat API names"
+          body: |
+            Automated weekly sync of MoonCat API names into `public/overrides.json`.
+
+            Review before merging because `catName` changes affect the public Hall of Fame display.
+          labels: automated-sync
