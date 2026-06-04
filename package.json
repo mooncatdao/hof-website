@@ -10,6 +10,8 @@
     "deploy": "wrangler deploy",
     "preview": "wrangler dev",
     "screenshots:mobile": "node scripts/capture-mobile-screenshots.mjs",
+    "sync:cat-names": "node scripts/sync-mooncat-names.mjs",
+    "sync:cat-names:check": "node scripts/sync-mooncat-names.mjs --check",
     "test": "node --test"
   },
   "dependencies": {

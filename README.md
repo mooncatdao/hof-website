@@ -15,7 +15,7 @@ The site displays a curated set of MoonCats and their holders using generated on
 - Cloudflare Pages Functions-compatible admin routes
 - GitHub OAuth organization login for the admin editor
 - Admin Save flow that commits curated overrides back to GitHub
-- Automated GitHub Actions workflows for member updates, image caching and GitHub Pages deployment
+- Automated GitHub Actions workflows for member updates, MoonCat name sync, image caching and GitHub Pages deployment
 - Node test suite for admin logic
 
 ## License
@@ -120,6 +120,18 @@ npm run cache:images
 Caches MoonCat images for the curated members listed in `public/overrides.json`.
 
 ```bash
+npm run sync:cat-names
+```
+
+Checks curated MoonCats against the MoonCat API and updates `catName` values in `public/overrides.json` when named MoonCats differ.
+
+```bash
+npm run sync:cat-names:check
+```
+
+Reports MoonCat API name differences without writing changes. This exits non-zero when updates are needed.
+
+```bash
 npm run preview
 ```
 
@@ -211,6 +223,26 @@ Edit this file to:
 - Override MoonCat names
 
 If `public/overrides.json` is missing or empty, the site can fall back to generated member data.
+
+### MoonCat Name Sync
+
+The `scripts/sync-mooncat-names.mjs` script checks each curated `rescueIndex` in
+`public/overrides.json` against:
+
+```text
+https://api.mooncatrescue.com/mooncat/traits/{rescueIndex}
+```
+
+When the API reports a named MoonCat, the script trims leading and trailing
+whitespace, preserves emoji and other Unicode characters, and updates only that
+member's `catName` field. Missing API names do not erase local `catName`
+values, and API/network failures prevent the script from writing a partial
+update.
+
+The `Sync MoonCat Names` GitHub Actions workflow runs weekly and can also be
+started manually. It opens a pull request when `public/overrides.json` changes.
+Review those PRs before merging because MoonCat names affect the public Hall of
+Fame display.
 
 ## MoonCat Image Cache
 
