@@ -340,6 +340,76 @@ body[data-warp="on"] .starfieldOrigin {
   opacity: 0.85;
 }
 
+.controlsToggle.is-highlighted {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.controlsToggle.is-highlighted img {
+  opacity: 0.95;
+}
+
+.themeHint {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 6;
+  display: grid;
+  justify-items: end;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 9px 10px 8px;
+  border: 2px solid var(--mint);
+  background: #f0f4df;
+  color: #111111;
+  box-shadow: var(--panel-shadow);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: right;
+  text-shadow: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.themeHint[hidden] {
+  display: none;
+}
+
+.themeHint.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.themeHint-arrow {
+  color: var(--mint-shadow);
+  font-size: 24px;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.themeHint-copy {
+  padding: 3px 0 7px;
+  white-space: nowrap;
+}
+
+.themeHint-hide {
+  min-height: 26px;
+  padding: 3px 8px;
+  border: 2px solid var(--mint);
+  background: #111111;
+  color: var(--mint);
+  box-shadow: var(--panel-shadow);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .controlsPanel {
   position: absolute;
   top: calc(100% + 8px);
@@ -629,12 +699,33 @@ img {
 
   .displayControls:hover,
   .displayControls:focus-within,
+  .displayControls.is-hinting,
   .displayControls[data-open="true"] {
-    opacity: 0.95;
+    opacity: 1;
+  }
+
+  .displayControls.is-hinting {
+    transition: none;
   }
 
   .controlsToggle img {
     opacity: 0.7;
+  }
+
+  .themeHint {
+    top: calc(100% + 4px);
+    right: 0;
+    max-width: min(238px, calc(100vw - 18px));
+    padding: 8px 9px 7px;
+    font-size: 16px;
+  }
+
+  .themeHint-arrow {
+    font-size: 22px;
+  }
+
+  .themeHint-hide {
+    min-height: 28px;
   }
 
   .controlsPanel {
@@ -733,6 +824,10 @@ img {
   }
 
   .warpHint {
+    transition: none;
+  }
+
+  .themeHint {
     transition: none;
   }
 }
