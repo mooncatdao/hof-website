@@ -99,8 +99,9 @@ The source repository must define a GitHub Actions secret named
 Only the public static viewer files are mirrored:
 
 - `public/index.html`
-- `public/display-options.js`
-- `public/libmooncat-limited.js`
+- `public/scripts/display-options.js`
+- `public/scripts/libmooncat-limited.js`
+- `public/scripts/site.js`
 - `public/styles/site.css`
 - `public/vendor/starfield.js`
 - `public/vendor/starfield.LICENSE.txt`
@@ -175,13 +176,16 @@ Runs the Node test suite.
 │       └── security.js
 ├── public/
 │   ├── _headers
-│   ├── admin-core.js
 │   ├── admin.html
-│   ├── display-options.js
 │   ├── index.html
-│   ├── libmooncat-limited.js
 │   ├── members.json
 │   ├── overrides.json
+│   ├── scripts/
+│   │   ├── admin-core.js
+│   │   ├── admin.js
+│   │   ├── display-options.js
+│   │   ├── libmooncat-limited.js
+│   │   └── site.js
 │   ├── styles/
 │   │   ├── admin.css
 │   │   └── site.css

@@ -4,11 +4,15 @@ const path = require('node:path')
 const test = require('node:test')
 const { pathToFileURL } = require('node:url')
 
-const adminCore = require('../public/admin-core.js')
+const adminCore = require('../public/scripts/admin-core.js')
 
 function importSourceModule(relativePath) {
   const source = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
   return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
+}
+
+function readProjectFile(relativePath) {
+  return fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
 }
 
 test('parseRescueIndex accepts only integer rescue indexes', () => {
@@ -98,7 +102,7 @@ test('manifest helpers expose cached rescue indexes and ignore failed cache file
 })
 
 test('display options map toggle states to cached variant paths and useful fallbacks', () => {
-  const displayOptions = require('../public/display-options.js')
+  const displayOptions = require('../public/scripts/display-options.js')
 
   assert.equal(displayOptions.getImageVariant(), 'regular')
   assert.equal(displayOptions.getImageVariant({ glow: true }), 'glow')
@@ -118,7 +122,7 @@ test('display options map toggle states to cached variant paths and useful fallb
 })
 
 test('compact holder link mode defaults on and links holder names for valid handles', () => {
-  const displayOptions = require('../public/display-options.js')
+  const displayOptions = require('../public/scripts/display-options.js')
 
   assert.equal(displayOptions.COMPACT_HOLDER_LINK_MODE, true)
   assert.deepEqual(displayOptions.getHolderTopTextOptions('@example'), {
@@ -138,7 +142,7 @@ test('compact holder link mode defaults on and links holder names for valid hand
 })
 
 test('holder top text options preserve two-line mode and avoid broken links', () => {
-  const displayOptions = require('../public/display-options.js')
+  const displayOptions = require('../public/scripts/display-options.js')
 
   assert.deepEqual(displayOptions.getHolderTopTextOptions('@example', false), {
     handleDisplay: '(@example)',
@@ -272,34 +276,27 @@ test('MoonCat name sync does not wipe local cat names when API names are missing
 })
 
 test('public image controls persist settings and refresh member images in place', () => {
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'index.html'),
-    'utf8',
-  )
+  const indexHtml = readProjectFile('public/index.html')
+  const siteJs = readProjectFile('public/scripts/site.js')
 
-  assert.match(indexHtml, /localStorage\.setItem\("hof-glow", nextValue\)/)
-  assert.match(indexHtml, /localStorage\.setItem\("hof-accessories", nextValue\)/)
-  assert.match(indexHtml, /document\.querySelectorAll\("\.member-image"\)\.forEach\(setMemberImage\)/)
+  assert.match(siteJs, /localStorage\.setItem\("hof-glow", nextValue\)/)
+  assert.match(siteJs, /localStorage\.setItem\("hof-accessories", nextValue\)/)
+  assert.match(siteJs, /document\.querySelectorAll\("\.member-image"\)\.forEach\(setMemberImage\)/)
   assert.match(indexHtml, /id="glowToggle"[\s\S]*?aria-pressed="false"/)
   assert.match(indexHtml, /id="accessoriesToggle"[\s\S]*?aria-pressed="false"/)
 })
 
 test('public theme controls include an early-use dismissible hint', () => {
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'index.html'),
-    'utf8',
-  )
-  const siteCss = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'styles', 'site.css'),
-    'utf8',
-  )
+  const indexHtml = readProjectFile('public/index.html')
+  const siteJs = readProjectFile('public/scripts/site.js')
+  const siteCss = readProjectFile('public/styles/site.css')
 
   assert.match(indexHtml, /id="themeHint"[\s\S]*?Themes and Options/)
   assert.match(indexHtml, /class="themeHint-hide"[\s\S]*?HIDE/)
-  assert.match(indexHtml, /THEME_HINT_VIEWS_KEY = "hofThemeHintViews"/)
-  assert.match(indexHtml, /THEME_HINT_HIDDEN_KEY = "hofThemeHintHidden"/)
-  assert.match(indexHtml, /THEME_HINT_MAX_VIEWS = 2/)
-  assert.match(indexHtml, /controlsToggle\.classList\.add\("is-highlighted"\)/)
+  assert.match(siteJs, /THEME_HINT_VIEWS_KEY = "hofThemeHintViews"/)
+  assert.match(siteJs, /THEME_HINT_HIDDEN_KEY = "hofThemeHintHidden"/)
+  assert.match(siteJs, /THEME_HINT_MAX_VIEWS = 2/)
+  assert.match(siteJs, /controlsToggle\.classList\.add\("is-highlighted"\)/)
   assert.match(siteCss, /\.controlsToggle\.is-highlighted\s*\{[\s\S]*?outline:\s*2px solid var\(--mint\)/)
   assert.match(siteCss, /\.themeHint\s*\{[\s\S]*?right:\s*0/)
   assert.match(siteCss, /\.themeHint\s*\{[\s\S]*?background:\s*#f0f4df/)
@@ -308,14 +305,11 @@ test('public theme controls include an early-use dismissible hint', () => {
 })
 
 test('public MoonCat images link to rescue-index profiles with secure new-tab attributes', () => {
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'index.html'),
-    'utf8',
+  const siteJs = readProjectFile('public/scripts/site.js')
+  const profileUrlHelper = siteJs.match(
+    /function getMoonCatProfileUrl\(member\) \{[\s\S]*?\n\}/,
   )
-  const profileUrlHelper = indexHtml.match(
-    /function getMoonCatProfileUrl\(member\) \{[\s\S]*?\n      \}/,
-  )
-  const imageLink = indexHtml.match(
+  const imageLink = siteJs.match(
     /const imageLink = document\.createElement\("a"\);[\s\S]*?imageFrame\.appendChild\(imageLink\);/,
   )
 
@@ -330,7 +324,7 @@ test('public MoonCat images link to rescue-index profiles with secure new-tab at
   assert.match(imageLink[0], /imageLink\.target = "_blank"/)
   assert.match(imageLink[0], /imageLink\.rel = "noopener noreferrer"/)
   assert.doesNotMatch(imageLink[0], /\.title\s*=/)
-  assert.match(indexHtml, /img\.alt = "MoonCat #" \+ member\.rescueIndex/)
+  assert.match(siteJs, /img\.alt = "MoonCat #" \+ member\.rescueIndex/)
 })
 
 test('public MoonCat image links zoom smoothly without layout resize or touch hover', () => {
@@ -409,41 +403,40 @@ test('validateMembers reports warnings without blocking export', () => {
 })
 
 test('admin page avoids direct HTML injection sinks', () => {
-  const adminHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'admin.html'),
-    'utf8',
-  )
+  const adminHtml = readProjectFile('public/admin.html')
+  const adminJs = readProjectFile('public/scripts/admin.js')
+  const adminSource = adminHtml + adminJs
 
-  assert.doesNotMatch(adminHtml, /\.innerHTML\s*=/)
-  assert.doesNotMatch(adminHtml, /\.outerHTML\s*=/)
-  assert.doesNotMatch(adminHtml, /insertAdjacentHTML\s*\(/)
-  assert.doesNotMatch(adminHtml, /document\.write\s*\(/)
-  assert.doesNotMatch(adminHtml, /javascript:/i)
+  assert.doesNotMatch(adminSource, /\.innerHTML\s*=/)
+  assert.doesNotMatch(adminSource, /\.outerHTML\s*=/)
+  assert.doesNotMatch(adminSource, /insertAdjacentHTML\s*\(/)
+  assert.doesNotMatch(adminSource, /document\.write\s*\(/)
+  assert.doesNotMatch(adminSource, /javascript:/i)
 })
 
 test('member card renderers create secure new-tab handle links', () => {
-  ;['public/index.html', 'public/admin.html'].forEach((relativePath) => {
-    const html = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+  ;['public/scripts/site.js', 'public/scripts/admin.js'].forEach((relativePath) => {
+    const source = readProjectFile(relativePath)
 
-    assert.match(html, /DisplayOptions\.getHolderTopTextOptions/)
-    assert.match(html, /if \(options\.showHandle\) top\.appendChild\(createHandleElement\(member\)\)/)
-    assert.match(html, /link\.target = ['"]_blank['"]/)
-    assert.match(html, /link\.rel = ['"]noopener noreferrer['"]/)
-    assert.match(html, /link\.title = options\.title/)
-    assert.match(html, /Open Twitter\/X profile for/)
+    assert.match(source, /DisplayOptions\.getHolderTopTextOptions/)
+    assert.match(source, /if \(options\.showHandle\) top\.appendChild\(createHandleElement\(member\)\)/)
+    assert.match(source, /link\.target = ['"]_blank['"]/)
+    assert.match(source, /link\.rel = ['"]noopener noreferrer['"]/)
+    assert.match(source, /link\.title = options\.title/)
+    assert.match(source, /Open Twitter\/X profile for/)
   })
 })
 
 test('member card renderers expose MoonCat poses for CSS positioning', () => {
-  ;['public/index.html', 'public/admin.html'].forEach((relativePath) => {
-    const html = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+  ;['public/scripts/site.js', 'public/scripts/admin.js'].forEach((relativePath) => {
+    const source = readProjectFile(relativePath)
 
-    assert.match(html, /LibMoonCat\.getTraits\(\s*['"]basic['"]/)
-    assert.match(html, /card\.dataset\.pose = getPose\(member\)/)
+    assert.match(source, /LibMoonCat\.getTraits\(\s*['"]basic['"]/)
+    assert.match(source, /card\.dataset\.pose = getPose\(member\)/)
   })
 
   ;['public/styles/site.css', 'public/styles/admin.css'].forEach((relativePath) => {
-    const css = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8')
+    const css = readProjectFile(relativePath)
 
     assert.match(css, /\.member-card\[data-pose=['"]sleeping['"]\]/)
     assert.match(css, /\.member-card\[data-pose=['"]standing['"]\]/)
@@ -456,34 +449,27 @@ test('member card renderers expose MoonCat poses for CSS positioning', () => {
 })
 
 test('admin page loads the tested admin core module', () => {
-  const adminHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'admin.html'),
-    'utf8',
-  )
+  const adminHtml = readProjectFile('public/admin.html')
+  const adminJs = readProjectFile('public/scripts/admin.js')
 
-  assert.match(adminHtml, /<script src="\.\/admin-core\.js"><\/script>/)
-  assert.match(adminHtml, /<script src="\.\/display-options\.js"><\/script>/)
-  assert.match(adminHtml, /const adminCore = window\.AdminCore/)
-  assert.match(adminHtml, /validateMembers/)
+  assert.match(adminHtml, /<script src="\.\/scripts\/admin-core\.js"><\/script>/)
+  assert.match(adminHtml, /<script src="\.\/scripts\/display-options\.js"><\/script>/)
+  assert.match(adminHtml, /<script src="\.\/scripts\/admin\.js"><\/script>/)
+  assert.match(adminJs, /const adminCore = window\.AdminCore/)
+  assert.match(adminJs, /validateMembers/)
 })
 
 test('public page rejects out-of-range override rescue indexes before rendering', () => {
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'index.html'),
-    'utf8',
-  )
+  const siteJs = readProjectFile('public/scripts/site.js')
 
-  assert.match(indexHtml, /rescueIndex < 0\s*\|\|\s*rescueIndex > 491/)
-  assert.match(indexHtml, /\.filter\(\(member\) => member !== null\)/)
+  assert.match(siteJs, /rescueIndex < 0\s*\|\|\s*rescueIndex > 491/)
+  assert.match(siteJs, /\.filter\(\(member\) => member !== null\)/)
 })
 
 test('admin field updates do not rebuild rows and reset editor scroll position', () => {
-  const adminHtml = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'admin.html'),
-    'utf8',
-  )
-  const updateMember = adminHtml.match(
-    /function updateMember\(index, field, value\) \{[\s\S]*?\n      \}/,
+  const adminJs = readProjectFile('public/scripts/admin.js')
+  const updateMember = adminJs.match(
+    /function updateMember\(index, field, value\) \{[\s\S]*?\n\}/,
   )
 
   assert.notEqual(updateMember, null)

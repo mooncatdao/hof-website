@@ -12,7 +12,7 @@ The site is mostly static: `public/index.html` renders the public Hall of Fame i
 - Admin editor page: `public/admin.html`
 - Public styling: `public/styles/site.css`
 - Admin styling: `public/styles/admin.css`
-- Shared admin logic: `public/admin-core.js`
+- Shared admin logic: `public/scripts/admin-core.js`
 - Generated member data: `public/members.json`
 - Curated display/order overrides: `public/overrides.json`
 - Cached MoonCat images: `public/assets/mooncats/<variant>/<rescueIndex>.png`
@@ -35,7 +35,7 @@ Public MoonCat images link to `https://mooncatrescue.com/mooncats/<rescueIndex>`
 
 The theme selector persists to `localStorage` using `hof-theme`. The warp toggle persists to `localStorage` using `hof-warp`, with a fallback read from the old `hof-flying` key. Glow and accessory image toggles persist using `hof-glow` and `hof-accessories`.
 
-Holder top text defaults to compact linked-name mode. Change `COMPACT_HOLDER_LINK_MODE` in `public/display-options.js` to `false` to restore the two-line holder name and Twitter/X handle display.
+Holder top text defaults to compact linked-name mode. Change `COMPACT_HOLDER_LINK_MODE` in `public/scripts/display-options.js` to `false` to restore the two-line holder name and Twitter/X handle display.
 
 ## Themes
 

@@ -12,11 +12,12 @@
 
 ## Public Site
 
-- `public/index.html`: main Hall of Fame page and browser rendering logic
+- `public/index.html`: main Hall of Fame page shell
+- `public/scripts/site.js`: public page browser rendering logic
 - `public/styles/site.css`: public page layout, themes, cards, controls tray, warp/starfield state
 - `public/members.json`: generated member data from on-chain and ENS metadata
 - `public/overrides.json`: curated Hall of Fame order and display overrides
-- `public/libmooncat-limited.js`: client-side fallback MoonCat rendering helper
+- `public/scripts/libmooncat-limited.js`: client-side fallback MoonCat rendering helper
 - `public/vendor/starfield.js`: warp/starfield visual effect
 - `public/vendor/starfield.LICENSE.txt`: starfield dependency license
 
@@ -30,8 +31,9 @@ The `regular` folder name is historical compatibility. Images are currently fetc
 
 ## Admin UI
 
-- `public/admin.html`: admin editor shell and browser UI
-- `public/admin-core.js`: testable admin data normalization, validation, export, and cache helpers
+- `public/admin.html`: admin editor shell
+- `public/scripts/admin.js`: admin browser UI
+- `public/scripts/admin-core.js`: testable admin data normalization, validation, export, and cache helpers
 - `public/styles/admin.css`: admin layout and styling
 
 The admin page loads generated members, overrides, and the image manifest. It supports validating curated entries, previewing the public card data, exporting JSON, and saving through Cloudflare Functions when authenticated.
@@ -77,4 +79,3 @@ npm test
 4. `public/index.html` loads generated data and overrides in the browser.
 5. Public cards prefer cached PNGs and fall back to LibMoonCat-generated images if needed.
 6. Admin edits can export JSON locally or save through Cloudflare Functions to GitHub.
-

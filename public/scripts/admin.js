@@ -1,0 +1,664 @@
+const state = {
+  members: [],
+  generatedByRescueIndex: new Map(),
+  cachedImages: new Set(),
+  isAuthenticated: false,
+  isDirty: false,
+  isSaving: false,
+};
+
+const fields = ["rescueIndex", "name", "handle", "catName"];
+const adminCore = window.AdminCore;
+
+function setStatus(message, isError = false) {
+  const status = document.getElementById("status");
+  status.textContent = message;
+  status.classList.toggle("danger", isError);
+}
+
+function setAuthStatus(message, isError = false) {
+  const authStatus = document.getElementById("authStatus");
+  authStatus.textContent = message;
+  authStatus.classList.toggle("danger", isError);
+}
+
+function normalizeTwitter(value) {
+  return adminCore.normalizeTwitter(value);
+}
+
+function stripEth(value) {
+  return adminCore.stripEth(value);
+}
+
+function titleCase(value) {
+  return adminCore.titleCase(value);
+}
+
+function getCatId(rescueIndex) {
+  return LibMoonCat.getCatId(rescueIndex);
+}
+
+function getPose(member) {
+  const traits = LibMoonCat.getTraits(
+    "basic",
+    member.catId || getCatId(member.rescueIndex),
+  );
+  return typeof traits.pose === "string" ? traits.pose : "";
+}
+
+function parseRescueIndex(value) {
+  return adminCore.parseRescueIndex(value);
+}
+
+function getDisplayName(member) {
+  if (typeof member.name === "string" && member.name.trim().length > 0) {
+    return member.name.trim();
+  }
+
+  return titleCase(stripEth(member.ensName));
+}
+
+function getHandle(member) {
+  if (typeof member.handle === "string") return member.handle.trim();
+  const twitter = normalizeTwitter(member.twitter);
+  if (twitter.length > 0) return twitter;
+  return typeof member.ensName === "string"
+    ? "(" + member.ensName + ")"
+    : "";
+}
+
+function createHandleElement(member) {
+  const handle = document.createElement("div");
+  handle.className = "member-handle";
+
+  const options = DisplayOptions.getHolderTopTextOptions(
+    getHandle(member),
+    false,
+  );
+  if (options.url === null) {
+    handle.textContent = options.handleDisplay;
+    return handle;
+  }
+
+  handle.appendChild(
+    createTwitterLink(
+      options.handleDisplay,
+      options,
+      getDisplayName(member),
+    ),
+  );
+
+  return handle;
+}
+
+function createTwitterLink(text, options, holderName) {
+  const link = document.createElement("a");
+  link.href = options.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.title = options.title;
+  link.setAttribute(
+    "aria-label",
+    "Open Twitter/X profile for " + holderName,
+  );
+  link.textContent = text;
+  return link;
+}
+
+function appendHolderTopText(top, member) {
+  const holderName = getDisplayName(member);
+  const options = DisplayOptions.getHolderTopTextOptions(
+    getHandle(member),
+  );
+  const name = document.createElement("div");
+  name.className = "member-name";
+
+  if (options.linkHolderName) {
+    name.appendChild(createTwitterLink(holderName, options, holderName));
+  } else {
+    name.textContent = holderName;
+  }
+
+  top.appendChild(name);
+  if (options.showHandle) top.appendChild(createHandleElement(member));
+}
+
+function getCachedCatImage(member) {
+  return "./assets/mooncats/regular/" + member.rescueIndex + ".png";
+}
+
+function getCachedImageKey(member) {
+  return adminCore.getCachedImageKey(member);
+}
+
+function getCacheStatus(member) {
+  return adminCore.getCacheStatus(member, state.cachedImages);
+}
+
+function getGeneratedCatImage(member) {
+  return LibMoonCat.generateImage(
+    member.catId || getCatId(member.rescueIndex),
+  );
+}
+
+function loadJson(path, required = true) {
+  return fetch(path).then((response) => {
+    if (!response.ok) {
+      if (!required) return null;
+      throw new Error("Failed to load " + path);
+    }
+
+    return response.json();
+  });
+}
+
+function getCachedImages(manifest) {
+  return adminCore.getCachedImages(manifest);
+}
+
+function getMergedMember(member) {
+  const rescueIndex = parseRescueIndex(member.rescueIndex);
+  if (rescueIndex === null) return { ...member, rescueIndex: null };
+
+  const generated = state.generatedByRescueIndex.get(rescueIndex) || {};
+
+  return {
+    ...generated,
+    ...member,
+    rescueIndex,
+    catId: member.catId || generated.catId || getCatId(rescueIndex),
+  };
+}
+
+function cleanMember(member) {
+  return adminCore.cleanMember(member);
+}
+
+function getExportJson() {
+  return adminCore.getExportJson(state.members);
+}
+
+function getExportData() {
+  return adminCore.getExportData(state.members);
+}
+
+function getValidation() {
+  return adminCore.validateMembers(state.members, state.cachedImages);
+}
+
+function downloadOverrides() {
+  const validation = getValidation();
+  if (validation.errors.length > 0) {
+    setStatus("Fix validation errors before exporting", true);
+    renderValidation(validation);
+    return;
+  }
+
+  const blob = new Blob([getExportJson()], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "overrides.json";
+  document.body.appendChild(link);
+  link.click();
+  URL.revokeObjectURL(link.href);
+  link.remove();
+  state.isDirty = false;
+  setStatus("Exported overrides.json");
+}
+
+function saveOverrides() {
+  const validation = getValidation();
+  if (validation.errors.length > 0) {
+    setStatus("Fix validation errors before saving", true);
+    renderValidation(validation);
+    return;
+  }
+
+  state.isSaving = true;
+  setStatus("Saving overrides.json to GitHub...");
+  renderValidation(validation);
+
+  fetch("./api/admin/save-overrides", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(getExportData()),
+  })
+    .then((response) =>
+      response.json().then((data) => ({ response, data })),
+    )
+    .then(({ response, data }) => {
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Could not save overrides.json");
+      }
+
+      state.isDirty = false;
+      const shortSha =
+        typeof data.commitSha === "string"
+          ? data.commitSha.slice(0, 7)
+          : "commit created";
+      setStatus(`Saved overrides.json to GitHub (${shortSha})`);
+    })
+    .catch((error) => {
+      console.error(error);
+      setStatus(error.message, true);
+    })
+    .finally(() => {
+      state.isSaving = false;
+      renderValidation();
+    });
+}
+
+function setDirty() {
+  state.isDirty = true;
+  setStatus("Unsaved changes");
+}
+
+function moveMember(index, direction) {
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= state.members.length) return;
+
+  const nextMembers = [...state.members];
+  const current = nextMembers[index];
+  nextMembers[index] = nextMembers[nextIndex];
+  nextMembers[nextIndex] = current;
+  state.members = nextMembers;
+  setDirty();
+  render();
+}
+
+function removeMember(index) {
+  state.members = state.members.filter(
+    (_, memberIndex) => memberIndex !== index,
+  );
+  setDirty();
+  render();
+}
+
+function addMember() {
+  state.members = [
+    ...state.members,
+    {
+      rescueIndex: "",
+      name: "",
+      handle: "",
+      catName: "",
+    },
+  ];
+  setDirty();
+  render();
+}
+
+function sortMembers() {
+  state.members = [...state.members].sort(
+    (a, b) =>
+      (parseRescueIndex(a.rescueIndex) ?? 999999) -
+      (parseRescueIndex(b.rescueIndex) ?? 999999),
+  );
+  setDirty();
+  render();
+}
+
+function updateMember(index, field, value) {
+  state.members[index] = {
+    ...state.members[index],
+    [field]: value,
+  };
+  setDirty();
+  renderValidation();
+  renderPreview();
+  updateCount();
+}
+
+function getGeneratedMeta(rescueIndex) {
+  const generated = state.generatedByRescueIndex.get(Number(rescueIndex));
+  if (typeof generated === "undefined") return "";
+
+  const pieces = [
+    generated.ensName,
+    generated.twitter,
+    generated.name,
+  ].filter(
+    (piece) => typeof piece === "string" && piece.trim().length > 0,
+  );
+
+  return pieces.join(" / ");
+}
+
+function renderRows() {
+  const rows = document.getElementById("rows");
+  rows.textContent = "";
+
+  state.members.forEach((member, index) => {
+    const row = document.createElement("article");
+    row.className = "entry";
+
+    const number = document.createElement("div");
+    number.className = "entry-number";
+
+    const entryIndex = document.createElement("div");
+    entryIndex.className = "entry-index";
+    entryIndex.textContent = String(index + 1);
+    number.appendChild(entryIndex);
+
+    const up = document.createElement("button");
+    up.className = "icon-button";
+    up.type = "button";
+    up.textContent = "Up";
+    up.disabled = index === 0;
+    up.addEventListener("click", () => moveMember(index, -1));
+    number.appendChild(up);
+
+    const down = document.createElement("button");
+    down.className = "icon-button";
+    down.type = "button";
+    down.textContent = "Dn";
+    down.disabled = index === state.members.length - 1;
+    down.addEventListener("click", () => moveMember(index, 1));
+    number.appendChild(down);
+
+    row.appendChild(number);
+
+    const content = document.createElement("div");
+
+    const fieldGrid = document.createElement("div");
+    fieldGrid.className = "entry-fields";
+
+    fieldGrid.appendChild(
+      createField(index, member, "rescueIndex", "#", "number"),
+    );
+    fieldGrid.appendChild(createField(index, member, "name", "Name"));
+    fieldGrid.appendChild(createField(index, member, "handle", "Handle"));
+    fieldGrid.appendChild(
+      createField(index, member, "catName", "Cat name", "text", true),
+    );
+    content.appendChild(fieldGrid);
+
+    const footer = document.createElement("div");
+    footer.className = "entry-footer";
+
+    const meta = document.createElement("div");
+    meta.className = "entry-meta";
+    const generatedMeta = getGeneratedMeta(member.rescueIndex);
+    const cacheStatus = getCacheStatus(member);
+    meta.textContent =
+      generatedMeta.length > 0
+        ? generatedMeta + " | " + cacheStatus
+        : cacheStatus;
+    footer.appendChild(meta);
+
+    const remove = document.createElement("button");
+    remove.className = "danger";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => removeMember(index));
+    footer.appendChild(remove);
+
+    content.appendChild(footer);
+    row.appendChild(content);
+    rows.appendChild(row);
+  });
+}
+
+function createField(
+  index,
+  member,
+  field,
+  labelText,
+  type = "text",
+  isWide = false,
+) {
+  const label = document.createElement("label");
+  if (isWide) label.className = "wide";
+  label.textContent = labelText;
+
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = member[field] ?? "";
+  input.addEventListener("input", () =>
+    updateMember(index, field, input.value),
+  );
+  label.appendChild(input);
+
+  return label;
+}
+
+function renderMember(member) {
+  const card = document.createElement("article");
+  card.className = "member-card";
+  card.dataset.pose = getPose(member);
+
+  const top = document.createElement("div");
+  top.className = "member-top";
+
+  appendHolderTopText(top, member);
+
+  const imageFrame = document.createElement("div");
+  imageFrame.className = "member-imageFrame";
+
+  const img = document.createElement("img");
+  img.className = "member-image";
+  img.alt = "MoonCat #" + member.rescueIndex;
+  img.src = getCachedCatImage(member);
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = getGeneratedCatImage(member);
+  };
+  imageFrame.appendChild(img);
+
+  const bottom = document.createElement("div");
+  bottom.className = "member-bottom";
+
+  const cat = document.createElement("div");
+  cat.className = "member-cat";
+  cat.textContent = "MoonCat #" + member.rescueIndex;
+  bottom.appendChild(cat);
+
+  if (
+    typeof member.catName === "string" &&
+    member.catName.trim().length > 0
+  ) {
+    const catName = document.createElement("div");
+    catName.className = "member-catName";
+    catName.textContent = member.catName.trim();
+    bottom.appendChild(catName);
+  }
+
+  card.appendChild(top);
+  card.appendChild(imageFrame);
+  card.appendChild(bottom);
+
+  return card;
+}
+
+function renderPreview() {
+  const previewGrid = document.getElementById("previewGrid");
+  previewGrid.textContent = "";
+
+  state.members
+    .map(getMergedMember)
+    .filter((member) => member.rescueIndex !== null)
+    .forEach((member) => {
+      previewGrid.appendChild(renderMember(member));
+    });
+}
+
+function updateCount() {
+  document.getElementById("count").textContent =
+    `${state.members.length} cards`;
+}
+
+function renderValidation(validation = getValidation()) {
+  const summary = document.getElementById("validationSummary");
+  const errors = document.getElementById("validationErrors");
+  const warnings = document.getElementById("validationWarnings");
+  const exportButton = document.getElementById("exportButton");
+  const saveButton = document.getElementById("saveButton");
+
+  summary.textContent =
+    validation.errors.length === 0
+      ? `${validation.exportableCount} exportable cards, ${validation.warnings.length} warnings`
+      : `${validation.errors.length} errors, ${validation.warnings.length} warnings`;
+
+  errors.textContent = "";
+  warnings.textContent = "";
+
+  validation.errors.forEach((error) => {
+    const item = document.createElement("li");
+    item.textContent = error.message;
+    errors.appendChild(item);
+  });
+
+  validation.warnings.forEach((warning) => {
+    const item = document.createElement("li");
+    item.textContent = warning.message;
+    warnings.appendChild(item);
+  });
+
+  exportButton.disabled = validation.errors.length > 0;
+  saveButton.disabled =
+    validation.errors.length > 0 ||
+    !state.isAuthenticated ||
+    state.isSaving;
+}
+
+function render() {
+  updateCount();
+  renderValidation();
+  renderRows();
+  renderPreview();
+}
+
+function importJson(file) {
+  if (typeof file === "undefined") return;
+
+  file
+    .text()
+    .then((text) => {
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed.members)) {
+        throw new Error("JSON must contain a members array");
+      }
+
+      state.members = parsed.members.map((member) => ({ ...member }));
+      state.isDirty = true;
+      setStatus("Imported JSON");
+      render();
+    })
+    .catch((error) => {
+      console.error(error);
+      setStatus(error.message, true);
+    });
+}
+
+function start() {
+  const params = new URLSearchParams(window.location.search);
+  const authError = params.get("auth_error");
+
+  if (authError !== null) {
+    setAuthStatus(authError, true);
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname,
+    );
+  }
+
+  Promise.all([
+    loadJson("./members.json"),
+    loadJson("./overrides.json"),
+    loadJson("./assets/mooncats/manifest.json", false),
+  ])
+    .then(([generatedMembers, overrides, manifest]) => {
+      state.generatedByRescueIndex = new Map(
+        generatedMembers.map((member) => [member.rescueIndex, member]),
+      );
+      state.cachedImages = getCachedImages(manifest);
+      state.members = overrides.members.map((member) => ({ ...member }));
+      state.isDirty = false;
+      setStatus("Loaded overrides.json");
+      render();
+    })
+    .catch((error) => {
+      console.error(error);
+      setStatus(error.message, true);
+    });
+}
+
+function refreshAuthStatus() {
+  fetch("./api/auth/status")
+    .then((response) => {
+      if (!response.ok)
+        throw new Error(
+          "GitHub login is unavailable in this environment",
+        );
+      return response.json();
+    })
+    .then((data) => {
+      const loginButton = document.getElementById("loginButton");
+      const logoutButton = document.getElementById("logoutButton");
+
+      if (data.authenticated) {
+        const user = data.user || {};
+        state.isAuthenticated = true;
+        setAuthStatus(`Logged in as ${user.login} (${user.githubOrg})`);
+        loginButton.classList.add("hidden");
+        logoutButton.classList.remove("hidden");
+        renderValidation();
+        return;
+      }
+
+      state.isAuthenticated = false;
+      setAuthStatus("Not logged in with GitHub");
+      loginButton.classList.remove("hidden");
+      logoutButton.classList.add("hidden");
+      renderValidation();
+    })
+    .catch(() => {
+      state.isAuthenticated = false;
+      setAuthStatus("GitHub login unavailable on this static server");
+      document.getElementById("loginButton").classList.add("hidden");
+      document.getElementById("logoutButton").classList.add("hidden");
+      renderValidation();
+    });
+}
+
+function logout() {
+  fetch("./api/auth/logout", { method: "POST" })
+    .then(() => refreshAuthStatus())
+    .catch(() => setAuthStatus("Could not log out", true));
+}
+
+window.addEventListener("beforeunload", (event) => {
+  if (!state.isDirty) return;
+
+  event.preventDefault();
+  event.returnValue = "";
+});
+
+document.getElementById("addButton").addEventListener("click", addMember);
+document
+  .getElementById("sortButton")
+  .addEventListener("click", sortMembers);
+document
+  .getElementById("saveButton")
+  .addEventListener("click", saveOverrides);
+document
+  .getElementById("exportButton")
+  .addEventListener("click", downloadOverrides);
+document.getElementById("reloadButton").addEventListener("click", start);
+document.getElementById("loginButton").addEventListener("click", () => {
+  window.location.href = "./api/auth/login";
+});
+document.getElementById("logoutButton").addEventListener("click", logout);
+document.getElementById("importButton").addEventListener("click", () => {
+  document.getElementById("fileInput").click();
+});
+document
+  .getElementById("fileInput")
+  .addEventListener("change", (event) => {
+    importJson(event.target.files[0]);
+    event.target.value = "";
+  });
+
+window.addEventListener("DOMContentLoaded", start);
+window.addEventListener("DOMContentLoaded", refreshAuthStatus);

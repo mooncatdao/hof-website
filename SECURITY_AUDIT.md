@@ -152,7 +152,7 @@ No High findings.
 ### I-3: Rescue indexes are now bounded to the Day 1 range
 
 - **References:** `functions/api/admin/save-overrides.js:19`,
-  `public/admin-core.js:11`, `public/index.html:400`
+  `public/scripts/admin-core.js:11`, `public/scripts/site.js:400`
 - **Result:** Admin validation, server-side saves, and public override rendering
   reject rescue indexes outside `0..491`.
 
