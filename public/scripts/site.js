@@ -224,6 +224,7 @@ function initAccessoriesToggle() {
 function applyTheme(theme) {
   const allowedThemes = new Set([
     "ac-t",
+    "ac-r",
     "ac",
     "og",
     "light",
