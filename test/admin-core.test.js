@@ -304,6 +304,32 @@ test('public theme controls include an early-use dismissible hint', () => {
   assert.match(siteCss, /\.themeHint-arrow\s*\{[\s\S]*?font-size:\s*24px/)
 })
 
+test('AC Rings theme follows Adoption Center ordering and layout', () => {
+  const indexHtml = readProjectFile('public/index.html')
+  const siteJs = readProjectFile('public/scripts/site.js')
+  const siteCss = readProjectFile('public/styles/site.css')
+  const adoptionCenterOption = indexHtml.indexOf('<option value="ac-t">Adoption Center</option>')
+  const acRingsOption = indexHtml.indexOf('<option value="ac-r">AC Rings</option>')
+  const acOnlyCatsOption = indexHtml.indexOf('<option value="ac">AC OnlyCats</option>')
+  const adoptionCenterTheme = siteJs.indexOf('"ac-t"')
+  const acRingsTheme = siteJs.indexOf('"ac-r"')
+  const acOnlyCatsTheme = siteJs.indexOf('"ac"')
+
+  assert.notEqual(adoptionCenterOption, -1)
+  assert.notEqual(acRingsOption, -1)
+  assert.notEqual(acOnlyCatsOption, -1)
+  assert.ok(adoptionCenterOption < acRingsOption)
+  assert.ok(acRingsOption < acOnlyCatsOption)
+  assert.ok(adoptionCenterTheme < acRingsTheme)
+  assert.ok(acRingsTheme < acOnlyCatsTheme)
+  assert.match(siteCss, /body\[data-theme="ac"\],\s*body\[data-theme="ac-t"\],\s*body\[data-theme="ac-r"\]\s*\{[\s\S]*?--ac-platform-offset-y:\s*3px/)
+  assert.match(siteCss, /body\[data-theme="ac-t"\] \.member-imageFrame,\s*body\[data-theme="ac-r"\] \.member-imageFrame\s*\{[\s\S]*?position:\s*relative/)
+  assert.match(siteCss, /body\[data-theme="ac-t"\] \.member-imageFrame::after,\s*body\[data-theme="ac-r"\] \.member-imageFrame::after\s*\{[\s\S]*?bottom:\s*calc\(0px - var\(--ac-platform-offset-y\)\)[\s\S]*?width:\s*100px[\s\S]*?height:\s*22px/)
+  assert.match(siteCss, /body\[data-theme="ac-r"\] \.member-imageFrame::after\s*\{[\s\S]*?border:\s*3px solid #ffffff[\s\S]*?background:\s*#000000/)
+  assert.match(siteCss, /body\[data-theme="ac-t"\] \.member-bottom,\s*body\[data-theme="ac-r"\] \.member-bottom\s*\{[\s\S]*?transform:\s*translateY\(calc\(6px \+ var\(--ac-platform-offset-y\)\)\)/)
+  assert.match(siteCss, /body\[data-theme="ac-t"\] \.grid,\s*body\[data-theme="ac-r"\] \.grid\s*\{[\s\S]*?gap:\s*24px 8px/)
+})
+
 test('public MoonCat images link to rescue-index profiles with secure new-tab attributes', () => {
   const siteJs = readProjectFile('public/scripts/site.js')
   const profileUrlHelper = siteJs.match(
