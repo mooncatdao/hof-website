@@ -25,7 +25,7 @@ reproduce it.
 ### MoonCat Rendering Helpers
 
 - Files:
-  - `public/libmooncat-limited.js`
+  - `public/scripts/libmooncat-limited.js`
   - `scripts/lib/libmooncat.js`
 - Upstream/provenance: MoonCat rendering helper code from ponderware,
   modified for this project as noted in the file headers.
@@ -36,7 +36,7 @@ reproduce it.
 ### pako
 
 - Files:
-  - Embedded in `public/libmooncat-limited.js`
+  - Embedded in `public/scripts/libmooncat-limited.js`
   - Embedded in `scripts/lib/libmooncat.js`
 - Upstream/provenance: nodeca/pako 0.2.7, as stated in the embedded bundle
   headers.
