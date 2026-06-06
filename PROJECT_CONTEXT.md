@@ -47,10 +47,11 @@ Supported public themes are:
 - `obsidian`
 - `deepspace`
 - `onlycats`
-- `ac`
 - `ac-t`
+- `ac-r`
+- `ac`
 
-`onlycats` hides text visually. `ac` and `ac-t` are Adoption Center-inspired variants that add CSS-only blue oval platforms under each MoonCat. `ac` hides text while preserving the same vertical spacing as `ac-t`; `ac-t` keeps text visible.
+`onlycats` hides text visually. `ac`, `ac-r`, and `ac-t` are Adoption Center-inspired variants that add CSS-only oval platforms under each MoonCat. `ac` hides text while preserving the same vertical spacing as `ac-t`; `ac-t` keeps text visible with the original blue oval, and `ac-r` keeps the same visible text and spacing with a white-ringed black oval.
 
 ## Card Metadata Positioning
 

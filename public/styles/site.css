@@ -1,11 +1,11 @@
 :root {
-  --bg: #111111;
+  --bg: #000000;
   --panel: #f0f4df;
   --panel-line: #151515;
   --panel-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
   --mint: #79ef76;
   --mint-shadow: #1e5931;
-  --text: #111111;
+  --text: #000000;
   --muted: #3e3e3e;
   --control-bg: rgba(240, 244, 223, 0.95);
   --control-text: #111111;
@@ -18,11 +18,11 @@
 }
 
 body[data-theme="og"] {
-  --bg: #111111;
+  --bg: #000000;
   --panel: #f0f4df;
   --panel-line: #151515;
   --panel-shadow: 3px 3px 0 rgba(0, 0, 0, 0.75);
-  --text: #111111;
+  --text: #000000;
   --muted: #3e3e3e;
   --control-bg: #111111;
   --control-text: #f0f4df;
@@ -38,7 +38,7 @@ body[data-theme="light"] {
   --panel: #ffffff;
   --panel-line: #242424;
   --panel-shadow: none;
-  --text: #111111;
+  --text: #000000;
   --muted: #4f5350;
   --control-bg: #ffffff;
   --control-text: #111111;
@@ -50,11 +50,11 @@ body[data-theme="light"] {
 }
 
 body[data-theme="dark"] {
-  --bg: #111111;
+  --bg: #000000;
   --panel: #111111;
   --panel-line: #79ef76;
   --panel-shadow: none;
-  --text: #f0f4df;
+  --text: #ffffff;
   --muted: #b6bea8;
   --control-bg: #111111;
   --control-text: #f0f4df;
@@ -66,11 +66,11 @@ body[data-theme="dark"] {
 }
 
 body[data-theme="obsidian"] {
-  --bg: #111111;
+  --bg: #000000;
   --panel: #111111;
   --panel-line: #111111;
   --panel-shadow: none;
-  --text: #f0f4df;
+  --text: #ffffff;
   --muted: #b6bea8;
   --control-bg: #111111;
   --control-text: #f0f4df;
@@ -82,11 +82,11 @@ body[data-theme="obsidian"] {
 }
 
 body[data-theme="deepspace"] {
-  --bg: #111111;
+  --bg: #000000;
   --panel: transparent;
   --panel-line: transparent;
   --panel-shadow: none;
-  --text: #f0f4df;
+  --text: #ffffff;
   --muted: #b6bea8;
   --control-bg: #111111;
   --control-text: #f0f4df;
@@ -98,7 +98,7 @@ body[data-theme="deepspace"] {
 }
 
 body[data-theme="onlycats"] {
-  --bg: #111111;
+  --bg: #000000;
   --panel: transparent;
   --panel-line: transparent;
   --panel-shadow: none;
@@ -114,8 +114,10 @@ body[data-theme="onlycats"] {
 }
 
 body[data-theme="ac"],
-body[data-theme="ac-t"] {
-  --bg: #111111;
+body[data-theme="ac-t"],
+body[data-theme="ac-r"] {
+  --ac-platform-offset-y: 3px;
+  --bg: #000000;
   --panel: transparent;
   --panel-line: transparent;
   --panel-shadow: none;
@@ -133,8 +135,9 @@ body[data-theme="ac"] {
   --muted: transparent;
 }
 
-body[data-theme="ac-t"] {
-  --text: #f0f4df;
+body[data-theme="ac-t"],
+body[data-theme="ac-r"] {
+  --text: #ffffff;
   --muted: #b6bea8;
 }
 
@@ -593,26 +596,34 @@ body[data-theme="ac"] .member-bottom {
 }
 
 body[data-theme="ac"] .member-imageFrame,
-body[data-theme="ac-t"] .member-imageFrame {
+body[data-theme="ac-t"] .member-imageFrame,
+body[data-theme="ac-r"] .member-imageFrame {
   position: relative;
 }
 
 body[data-theme="ac"] .member-imageFrame::after,
-body[data-theme="ac-t"] .member-imageFrame::after {
+body[data-theme="ac-t"] .member-imageFrame::after,
+body[data-theme="ac-r"] .member-imageFrame::after {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: 0px;
+  bottom: calc(0px - var(--ac-platform-offset-y));
   z-index: 0;
   width: 100px;
-  height: 16px;
+  height: 22px;
   border-radius: 50%;
-  background: #6666ff;
+  background: #6666f6;
   transform: translateX(-50%);
 }
 
+body[data-theme="ac-r"] .member-imageFrame::after {
+  border: 3px solid #ffffff;
+  background: #000000;
+}
+
 body[data-theme="ac"] .member-image,
-body[data-theme="ac-t"] .member-image {
+body[data-theme="ac-t"] .member-image,
+body[data-theme="ac-r"] .member-image {
   position: relative;
   z-index: 1;
 }
@@ -623,15 +634,17 @@ body[data-theme="ac-t"] .member-image {
   margin-top: 0;
 }
 
-body:not([data-theme="ac-t"]) .member-bottom {
+body:not([data-theme="ac-t"]):not([data-theme="ac-r"]) .member-bottom {
   transform: translateY(3px);
 }
 
-body[data-theme="ac-t"] .member-bottom {
-  transform: translateY(6px);
+body[data-theme="ac-t"] .member-bottom,
+body[data-theme="ac-r"] .member-bottom {
+  transform: translateY(calc(6px + var(--ac-platform-offset-y)));
 }
 
-body[data-theme="ac-t"] .grid {
+body[data-theme="ac-t"] .grid,
+body[data-theme="ac-r"] .grid {
   gap: 24px 8px;
 }
 
