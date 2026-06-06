@@ -8,8 +8,9 @@ on:
       - "public/index.html"
       - "public/styles/site.css"
       - "public/assets/**"
-      - "public/display-options.js"
-      - "public/libmooncat-limited.js"
+      - "public/scripts/display-options.js"
+      - "public/scripts/libmooncat-limited.js"
+      - "public/scripts/site.js"
       - "public/vendor/starfield.js"
       - "public/vendor/starfield.LICENSE.txt"
       - "public/members.json"
@@ -55,11 +56,13 @@ jobs:
           set -euo pipefail
 
           mkdir -p mooncatdao-website/hof/styles
+          mkdir -p mooncatdao-website/hof/scripts
           mkdir -p mooncatdao-website/hof/vendor
 
           cp hof-website/public/index.html mooncatdao-website/hof/index.html
-          cp hof-website/public/display-options.js mooncatdao-website/hof/display-options.js
-          cp hof-website/public/libmooncat-limited.js mooncatdao-website/hof/libmooncat-limited.js
+          cp hof-website/public/scripts/display-options.js mooncatdao-website/hof/scripts/display-options.js
+          cp hof-website/public/scripts/libmooncat-limited.js mooncatdao-website/hof/scripts/libmooncat-limited.js
+          cp hof-website/public/scripts/site.js mooncatdao-website/hof/scripts/site.js
           cp hof-website/public/members.json mooncatdao-website/hof/members.json
           cp hof-website/public/overrides.json mooncatdao-website/hof/overrides.json
           cp hof-website/public/styles/site.css mooncatdao-website/hof/styles/site.css

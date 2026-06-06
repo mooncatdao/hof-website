@@ -485,6 +485,28 @@ test('admin page loads the tested admin core module', () => {
   assert.match(adminJs, /validateMembers/)
 })
 
+test('DAO website sync workflow mirrors public script paths used by index.html', () => {
+  const workflow = readProjectFile('.github/workflows/sync-public-hof-to-dao-site.yml')
+
+  ;[
+    'public/scripts/display-options.js',
+    'public/scripts/libmooncat-limited.js',
+    'public/scripts/site.js',
+  ].forEach((scriptPath) => {
+    const targetPath = scriptPath.replace('public/', '')
+
+    assert.match(workflow, new RegExp(`- "${scriptPath}"`))
+    assert.match(
+      workflow,
+      new RegExp(`cp hof-website/${scriptPath} mooncatdao-website/hof/${targetPath}`),
+    )
+  })
+
+  assert.match(workflow, /mkdir -p mooncatdao-website\/hof\/scripts/)
+  assert.doesNotMatch(workflow, /hof-website\/public\/display-options\.js/)
+  assert.doesNotMatch(workflow, /hof-website\/public\/libmooncat-limited\.js/)
+})
+
 test('public page rejects out-of-range override rescue indexes before rendering', () => {
   const siteJs = readProjectFile('public/scripts/site.js')
 

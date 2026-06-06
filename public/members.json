@@ -280,12 +280,6 @@
     "catId": "0x00693b84d7"
   },
   {
-    "rescueIndex": 250,
-    "ownerAddress": "0x7B37BBA6dAc9eaDDf53A676db008151Fc77e0C75",
-    "ensName": "wagingvillager.eth",
-    "catId": "0x00c1aa0a5e"
-  },
-  {
     "rescueIndex": 255,
     "ownerAddress": "0x382b315AcB0BA72aA7034319Dc7Ee3fFFda98a9e",
     "ensName": "thewitcher.eth",
