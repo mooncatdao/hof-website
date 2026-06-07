@@ -2,6 +2,20 @@
 *:Zone.Identifier
 node_modules/
 test-artifacts/
+*.log
+*.tmp
+*.bak
+*.backup
+*.local
+
+# private/internal docs
+.private/
+private/
+*_PRIVATE.md
+*_INTERNAL.md
+SECURITY_AUDIT.md
+PUBLIC_REPO_REVIEW.md
+cloudflare deployment notes.md
 
 # wrangler files
 .wrangler

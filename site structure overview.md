@@ -3,16 +3,13 @@
 ## Top-Level Files
 
 - `README.md`: human-facing project notes and commands
-- `PROJECT_CONTEXT.md`: compact project context for AI/code discussions
 - `CONTRIBUTING.md`: contribution, security, and private-data handling guidance
-- `SECURITY_AUDIT.md`: security review notes for the public repository
-- `PUBLIC_REPO_REVIEW.md`: public-release review notes and follow-up items
+- `SECURITY.md`: public security reporting and secret-handling guidance
 - `LICENSE`: AGPL-3.0-or-later license text
 - `NOTICE.md`: third-party and generated-code notices
 - `package.json`: Node scripts, dependencies, and engine requirement
 - `package-lock.json`: locked npm dependency tree
 - `wrangler.jsonc`: Cloudflare/Wrangler asset and compatibility config
-- `cloudflare deployment notes.md`: Cloudflare setup details
 - `site structure overview.md`: this file
 
 ## Public Site

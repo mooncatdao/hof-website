@@ -4,8 +4,8 @@ Thanks for helping improve the MoonCats Hall of Fame website. This guide covers
 the local development workflow, the generated and curated data files, and what
 to include in a pull request.
 
-For a project overview, start with [README.md](README.md). Security notes and
-follow-up items are recorded in [SECURITY_AUDIT.md](SECURITY_AUDIT.md). This
+For a project overview, start with [README.md](README.md). Security reporting
+and secret-handling guidance is recorded in [SECURITY.md](SECURITY.md). This
 project is licensed under the terms in [LICENSE](LICENSE).
 
 ## Prerequisites
@@ -126,9 +126,9 @@ The public Hall of Fame is a static site. The admin editor has two modes:
   `/admin.html`, and the Save button can commit normalized overrides through
   the GitHub contents API.
 
-Local preview does not need production secrets. Maintainers configuring OAuth,
-server-side saves, or deployment should follow
-[cloudflare deployment notes.md](cloudflare%20deployment%20notes.md).
+Local preview does not need production secrets. Configure OAuth, server-side
+saves, and deployment secrets only in the hosting provider or GitHub Actions
+environment.
 
 ## Testing And Style
 
@@ -171,5 +171,5 @@ OAuth client secrets, session secrets, GitHub tokens, or private keys. The
 local environment file patterns are ignored by Git, but review your diff
 before committing.
 
-For security-sensitive changes, read [SECURITY_AUDIT.md](SECURITY_AUDIT.md)
-and avoid posting secret values in issues or pull requests.
+For security-sensitive changes, read [SECURITY.md](SECURITY.md) and avoid
+posting secret values in issues or pull requests.

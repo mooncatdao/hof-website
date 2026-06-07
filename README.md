@@ -207,7 +207,7 @@ Runs the Node test suite.
 ├── .github/workflows/
 ├── wrangler.jsonc
 ├── CONTRIBUTING.md
-├── SECURITY_AUDIT.md
+├── SECURITY.md
 └── README.md
 ```
 
@@ -401,11 +401,8 @@ The repository includes both Cloudflare and GitHub Pages-related configuration.
 
 `wrangler.jsonc` configures the project name, compatibility date, `public/` assets directory, observability and `nodejs_compat`.
 
-For Cloudflare setup details, see:
-
-```text
-cloudflare deployment notes.md
-```
+Configure deployment secrets in the hosting provider environment. Do not commit
+OAuth client secrets, session secrets, GitHub tokens, or local environment files.
 
 ### GitHub Pages Workflow
 
@@ -501,7 +498,7 @@ Before opening a pull request:
 - Include screenshots for visual changes
 - Mention generated data, curated data or cached asset changes
 - Do not commit secrets
-- Review `SECURITY_AUDIT.md` before security-sensitive changes
+- Review `SECURITY.md` before security-sensitive changes
 
 ## Security Notes
 
