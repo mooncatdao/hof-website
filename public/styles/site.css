@@ -16,6 +16,7 @@
   --star-faint: 0.7;
   --static-stars-large: url("../assets/bgstarslarge.png");
   --static-stars-small: url("../assets/bgstarssmall.png");
+  --static-stars-shade: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
   --card-top-text-safe-offset-y: 22px;
 }
 
@@ -51,6 +52,7 @@ body[data-theme="light"] {
   --star-faint: 0;
   --static-stars-large: none;
   --static-stars-small: none;
+  --static-stars-shade: none;
 }
 
 body[data-theme="dark"] {
@@ -168,10 +170,13 @@ body {
 body,
 .export-poster {
   background-color: var(--bg);
-  background-image: var(--static-stars-large), var(--static-stars-small);
-  background-position: 0 0, 0 0;
-  background-repeat: repeat, repeat;
-  background-size: 600px 600px, 300px 300px;
+  background-image:
+    var(--static-stars-shade),
+    var(--static-stars-large),
+    var(--static-stars-small);
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat;
+  background-size: 100% 100%, 600px 600px, 300px 300px;
 }
 
 body[data-warp="on"] {
@@ -856,6 +861,11 @@ img {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 10px;
+}
+
+body[data-theme="ac-t"] .export-grid,
+body[data-theme="ac-r"] .export-grid {
+  row-gap: 24px;
 }
 
 .export-poster-scoped .member-card {
