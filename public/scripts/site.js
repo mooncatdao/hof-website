@@ -6,6 +6,9 @@ function titleCase(value) {
     .join(" ");
 }
 
+const EXPORT_WIDTH = 1400;
+let currentMembers = [];
+
 function stripEth(value) {
   return typeof value === "string" ? value.replace(/\.eth$/i, "") : "";
 }
@@ -13,6 +16,19 @@ function stripEth(value) {
 function normalizeTwitter(value) {
   if (typeof value !== "string" || value.length === 0) return null;
   return value.startsWith("@") ? value : "@" + value;
+}
+
+function getExportTwitterHandle(member) {
+  const explicitHandle =
+    typeof member.handle === "string" && member.handle.trim().length > 0
+      ? member.handle
+      : member.twitter;
+
+  if (typeof explicitHandle !== "string" || explicitHandle.trim().length === 0) {
+    return null;
+  }
+
+  return normalizeTwitter(explicitHandle.trim());
 }
 
 function getCatId(rescueIndex) {
@@ -88,7 +104,7 @@ function createTwitterLink(text, options, holderName) {
   return link;
 }
 
-function appendHolderTopText(top, member) {
+function appendHolderTopText(top, member, includeExportHandle = false) {
   const holderName = getDisplayName(member);
   const options = DisplayOptions.getHolderTopTextOptions(
     getHandle(member),
@@ -103,7 +119,18 @@ function appendHolderTopText(top, member) {
   }
 
   top.appendChild(name);
-  if (options.showHandle) top.appendChild(createHandleElement(member));
+  if (includeExportHandle) {
+    const exportHandle = getExportTwitterHandle(member);
+    if (exportHandle !== null) {
+      const handle = document.createElement("div");
+      handle.className = "member-handle";
+      handle.textContent = "(" + exportHandle + ")";
+      top.appendChild(handle);
+    }
+  }
+  if (!includeExportHandle) {
+    if (options.showHandle) top.appendChild(createHandleElement(member));
+  }
 }
 
 function getGeneratedCatImage(member) {
@@ -637,6 +664,137 @@ function initControlsTray() {
   });
 }
 
+function buildExportPoster() {
+  const poster = document.createElement("div");
+  poster.className = "export-poster export-poster-scoped";
+  poster.setAttribute("aria-hidden", "true");
+
+  const masthead = document.createElement("header");
+  masthead.className = "export-masthead";
+
+  const title = document.createElement("h1");
+  title.className = "export-title";
+  title.textContent = "Day 1 MoonCat Club";
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "export-subtitle";
+  subtitle.textContent = "Hall of Fame";
+
+  masthead.appendChild(title);
+  masthead.appendChild(subtitle);
+
+  const grid = document.createElement("section");
+  grid.className = "export-grid";
+  currentMembers.forEach((member) =>
+    grid.appendChild(renderMember(member, { includeExportHandle: true })),
+  );
+
+  poster.appendChild(masthead);
+  poster.appendChild(grid);
+  return poster;
+}
+
+async function waitForExportImages(poster) {
+  const images = [...poster.querySelectorAll("img")];
+
+  await Promise.all(
+    images.map(async (image) => {
+      if (!image.complete) {
+        await new Promise((resolve) => {
+          const finish = () => {
+            image.removeEventListener("load", finish);
+            image.removeEventListener("error", finish);
+            resolve();
+          };
+
+          image.addEventListener("load", finish, { once: true });
+          image.addEventListener("error", finish, { once: true });
+          window.setTimeout(finish, 5000);
+        });
+      }
+
+      if (typeof image.decode === "function") {
+        try {
+          await image.decode();
+        } catch (error) {
+          // html2canvas can still render the fallback or empty image.
+        }
+      }
+    }),
+  );
+}
+
+function downloadCanvas(canvas, filename) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob === null) {
+        reject(new Error("Could not create PNG data."));
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 0);
+    }, "image/png");
+  });
+}
+
+async function exportHallOfFame() {
+  const button = document.getElementById("exportButton");
+
+  if (currentMembers.length === 0 || typeof html2canvas !== "function") {
+    return;
+  }
+
+  const theme = document.body.dataset.theme || "ac-t";
+  const poster = buildExportPoster();
+  button.disabled = true;
+  button.textContent = "Saving...";
+  document.body.appendChild(poster);
+
+  try {
+    if (document.fonts?.ready) await document.fonts.ready;
+    await waitForExportImages(poster);
+
+    const canvas = await html2canvas(poster, {
+      backgroundColor: null,
+      height: poster.scrollHeight,
+      imageTimeout: 15000,
+      logging: false,
+      scale: 2,
+      useCORS: true,
+      width: EXPORT_WIDTH,
+      windowHeight: poster.scrollHeight,
+      windowWidth: EXPORT_WIDTH,
+    });
+
+    await downloadCanvas(
+      canvas,
+      "day-1-mooncat-club-hall-of-fame-" + theme + ".png",
+    );
+  } catch (error) {
+    console.error("Could not export Hall of Fame PNG.", error);
+  } finally {
+    poster.remove();
+    button.disabled = false;
+    button.textContent = "Save PNG";
+  }
+}
+
+function initExportButton() {
+  document
+    .getElementById("exportButton")
+    .addEventListener("click", exportHallOfFame);
+}
+
 function applyOverrides(members, overrides) {
   const generatedByRescueIndex = new Map(
     members.map((member) => [member.rescueIndex, member]),
@@ -685,7 +843,7 @@ async function loadJson(path, required = true) {
   return response.json();
 }
 
-function renderMember(member) {
+function renderMember(member, { includeExportHandle = false } = {}) {
   const card = document.createElement("article");
   card.className = "member-card";
   card.dataset.pose = getPose(member);
@@ -693,7 +851,7 @@ function renderMember(member) {
   const top = document.createElement("div");
   top.className = "member-top";
 
-  appendHolderTopText(top, member);
+  appendHolderTopText(top, member, includeExportHandle);
 
   const imageFrame = document.createElement("div");
   imageFrame.className = "member-imageFrame";
@@ -757,6 +915,7 @@ async function start() {
       loadJson("./overrides.json", false),
     ]);
     const members = applyOverrides(generatedMembers, overrides);
+    currentMembers = members;
 
     const grid = document.createElement("section");
     grid.className = "grid";
@@ -768,6 +927,7 @@ async function start() {
     app.className = "grid";
     app.textContent = "";
     app.replaceWith(grid);
+    document.getElementById("exportButton").disabled = members.length === 0;
   } catch (error) {
     console.error(error);
     app.className = "error";
@@ -777,6 +937,7 @@ async function start() {
 
 window.addEventListener("DOMContentLoaded", () => {
   initControlsTray();
+  initExportButton();
   initThemePicker();
   initThemeHint();
   initWarpToggle();

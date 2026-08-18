@@ -14,6 +14,8 @@
   --star-medium: 0.8;
   --star-soft: 0.75;
   --star-faint: 0.7;
+  --static-stars-large: url("../assets/bgstarslarge.png");
+  --static-stars-small: url("../assets/bgstarssmall.png");
   --card-top-text-safe-offset-y: 22px;
 }
 
@@ -47,6 +49,8 @@ body[data-theme="light"] {
   --star-medium: 0;
   --star-soft: 0;
   --star-faint: 0;
+  --static-stars-large: none;
+  --static-stars-small: none;
 }
 
 body[data-theme="dark"] {
@@ -159,52 +163,15 @@ body {
   position: relative;
   font-family: "Trebuchet MS", "Verdana", sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(
-      circle at 12% 18%,
-      rgba(255, 255, 255, var(--star-strong)) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 74% 9%,
-      rgba(255, 255, 255, var(--star-bright)) 0 1.5px,
-      transparent 2.5px
-    ),
-    radial-gradient(
-      circle at 87% 36%,
-      rgba(255, 255, 255, var(--star-soft)) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 21% 63%,
-      rgba(255, 255, 255, var(--star-medium)) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 60% 71%,
-      rgba(255, 255, 255, var(--star-bright)) 0 1.5px,
-      transparent 2.5px
-    ),
-    radial-gradient(
-      circle at 94% 81%,
-      rgba(255, 255, 255, var(--star-medium)) 0 1px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at 43% 91%,
-      rgba(255, 255, 255, var(--star-faint)) 0 1px,
-      transparent 2px
-    ),
-    var(--bg);
-  background-size:
-    240px 240px,
-    310px 310px,
-    270px 270px,
-    330px 330px,
-    290px 290px,
-    350px 350px,
-    300px 300px,
-    auto;
+}
+
+body,
+.export-poster {
+  background-color: var(--bg);
+  background-image: var(--static-stars-large), var(--static-stars-small);
+  background-position: 0 0, 0 0;
+  background-repeat: repeat, repeat;
+  background-size: 600px 600px, 300px 300px;
 }
 
 body[data-warp="on"] {
@@ -843,4 +810,86 @@ img {
   .themeHint {
     transition: none;
   }
+}
+
+/* The PNG export is a fixed desktop poster, independent of the live viewport. */
+.export-poster {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  display: block;
+  width: 1400px;
+  min-height: 100px;
+  overflow: hidden;
+  padding: 48px 44px 56px;
+  color: var(--text);
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+}
+
+.export-masthead {
+  margin: 0 0 34px;
+  text-align: center;
+}
+
+.export-title,
+.export-subtitle {
+  margin: 0;
+  color: var(--mint);
+  font-family: "Setback TT (BRK)", Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 4px 4px 0 var(--mint-shadow);
+}
+
+.export-title {
+  font-size: 86px;
+  line-height: 0.94;
+}
+
+.export-subtitle {
+  margin-top: 12px;
+  font-size: 50px;
+  line-height: 0.95;
+}
+
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.export-poster-scoped .member-card {
+  --card-top-text-offset-y: 4px;
+  --card-top-text-safe-offset-y: 22px;
+
+  grid-template-rows: 34px 92px minmax(28px, auto);
+  min-height: 160px;
+  padding: 4px 6px;
+}
+
+.export-poster-scoped .member-top {
+  min-height: 34px;
+}
+
+.export-poster-scoped .member-name {
+  font-size: 11px;
+}
+
+.export-poster-scoped .member-handle,
+.export-poster-scoped .member-fav,
+.export-poster-scoped .member-catName {
+  font-size: 10px;
+}
+
+.export-poster-scoped .member-imageFrame {
+  height: 92px;
+  padding-bottom: 4px;
+}
+
+.export-poster-scoped .member-image {
+  max-height: 88px;
+}
+
+.export-poster-scoped .member-cat {
+  font-size: 11px;
 }

@@ -12,6 +12,7 @@ The site displays a curated set of MoonCats and their holders using generated on
 - Curated member list using `public/overrides.json`
 - Generated member data using Ethereum mainnet, ENS, Delegate.xyz and MoonCats contract data
 - Cached MoonCat PNG images for faster loading
+- Public Hall of Fame PNG export using the selected theme and display options
 - Cloudflare Pages Functions-compatible admin routes
 - GitHub OAuth organization login for the admin editor
 - Admin Save flow that commits curated overrides back to GitHub
@@ -105,11 +106,18 @@ Only the public static viewer files are mirrored:
 - `public/styles/site.css`
 - `public/vendor/starfield.js`
 - `public/vendor/starfield.LICENSE.txt`
+- `public/vendor/html2canvas.min.js`
+- `public/vendor/html2canvas.LICENSE.txt`
 - `public/assets/**`
 - `public/members.json`
 - `public/overrides.json`
 
 Admin, auth, API, editor and Cloudflare Functions files are intentionally excluded from the sync.
+
+The public viewer's `Save PNG` control exports the full Hall of Fame as a
+poster-style PNG using the current theme and current Glow/Accessories state.
+The live Warp animation is intentionally not captured; the export uses the
+theme's normal static background treatment.
 
 ## Available Scripts
 
